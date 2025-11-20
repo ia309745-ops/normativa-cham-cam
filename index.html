@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zonificación Urbana de Champotón</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body>
+
+    <header id="main-header">
+        <h1 id="header-title">Zonificación Urbana de Champotón</h1>
+        <nav class="tabs">
+            <button class="tab-link" data-tab="modal-tab-info">Información</button>
+            <button class="tab-link" data-tab="modal-tab-web">Sitios Web</button>
+            <button class="tab-link" data-tab="modal-tab-calificar">Calificar Visor</button>
+            <button class="tab-link" data-tab="modal-tab-contacto">Contacto</button> 
+        </nav>
+    </header>
+
+    <div id="map"></div> 
+
+    <div id="left-controls">
+        <button id="btn-ubicacion" title="Encuéntrate">
+            <i class="fa-solid fa-location-dot"></i>
+        </button>
+    </div>
+
+    <div id="global-dashboard">
+        <h3>Diagnóstico por Uso</h3>
+        <div id="stats-container">
+            <p>Cargando datos...</p>
+        </div>
+    </div>
+
+    <div id="dashboard">
+        <div id="tab-content">
+            <div id="tab-info" class="tab-pane active">
+                <p id="info-default">Selecciona una zona para ver sus detalles.</p>
+                
+                <div id="info-panel" style="display: none;">
+                    <h3 id="dash-titulo"></h3> 
+                    <p id="dash-uso-suelo"></p>
+                    <p id="dash-area-m2"></p>
+                    <p id="dash-area-ha"></p>
+                    
+                    <div style="margin-top: 15px; text-align: center;">
+                        <a id="btn-gmaps" href="#" target="_blank" style="
+                            display: inline-block;
+                            background-color: #1976D2;
+                            color: white;
+                            padding: 8px 15px;
+                            text-decoration: none;
+                            border-radius: 5px;
+                            font-weight: bold;
+                            font-size: 0.9em;
+                        ">
+                            <i class="fa-solid fa-street-view"></i> Ver en Google Maps
+                        </a>
+                    </div>
+                </div>
+
+    <div id="modal-overlay">
+        <div id="modal-container">
+            <button id="modal-close-btn">×</button>
+            
+            <div id="modal-tab-info" class="modal-tab-pane active">
+                <h2>Información del Visor</h2>
+                <h3>Objetivo: Transparencia y Acceso a la Información</h3>
+                <p>Este Geovisualizador tiene como propósito fundamental <b>democratizar el acceso a la información urbana</b> de Champotón. Buscamos transformar la normativa técnica de uso de suelo en una herramienta interactiva, visual y fácil de comprender para toda la ciudadanía.</p>
+                <p>Al hacer pública y accesible esta información, fomentamos la transparencia en la gestión territorial y empoderamos a los habitantes para tomar decisiones informadas sobre su entorno y propiedad.</p>
+                
+                <h3>Fuente de Datos</h3>
+                <p>La información geoespacial, la zonificación y la normativa aquí representadas han sido procesadas y estructuradas por:</p>
+                <div style="background: #f4f4f4; padding: 10px; border-left: 4px solid #1976D2; margin: 10px 0;">
+                    <strong>Encaje Territorial & Urbano</strong>
+                </div>
+                
+                <h3>¿Qué muestra este mapa?</h3>
+                <p>El mapa visualiza la <b>Zonificación Secundaria</b> de la ciudad, indicando qué actividades (vivienda, comercio, industria, conservación) están permitidas en cada predio según la paleta de colores oficial.</p>
+            </div>
+
+            <div id="modal-tab-web" class="modal-tab-pane">
+                <h2>Sitios Web de Interés</h2>
+                <ul>
+                    <li><a href="https://www.encajeterritorialurbano.mx/" target="_blank"><i class="fa-solid fa-globe"></i> Encaje Territorial & Urbano</a></li>
+                    <li><a href="https://www.campeche.gob.mx/" target="_blank"><i class="fa-solid fa-building-columns"></i> Gobierno del Estado de Campeche</a></li>
+                    <li><a href="http://www.champoton.gob.mx/" target="_blank"><i class="fa-solid fa-landmark"></i> H. Ayuntamiento de Champotón</a></li>
+                </ul>
+            </div>
+
+            <div id="modal-tab-calificar" class="modal-tab-pane">
+                <h4>Califica este Geovisualizador</h4>
+                <p>¿Te ha sido útil esta herramienta para consultar el uso de suelo?</p>
+                <div class="rating-stars">
+                    <i class="fa-solid fa-star" data-value="1"></i>
+                    <i class="fa-solid fa-star" data-value="2"></i>
+                    <i class="fa-solid fa-star" data-value="3"></i>
+                    <i class="fa-solid fa-star" data-value="4"></i>
+                    <i class="fa-solid fa-star" data-value="5"></i>
+                </div>
+                <textarea id="comment-box" rows="4" placeholder="Escribe tu comentario o sugerencia..."></textarea>
+                <button id="submit-rating-btn">Enviar Opinión</button>
+                <small id="rating-note">Nota: Tu retroalimentación nos ayuda a mejorar la plataforma.</small>
+            </div>
+
+            <div id="modal-tab-contacto" class="modal-tab-pane">
+                <h2>Contacto y Desarrollo</h2>
+                <div class="contact-person">
+                    <h3>Urbanista Ismael Luna</h3>
+                    <p><i class="fa-solid fa-envelope"></i> <a href="mailto:ia309745@gmail.com">ia309745@gmail.com</a></p>
+                </div>
+                <div class="contact-affiliation">
+                    <p>Universidad Nacional Autónoma de México (UNAM)</p>
+                    <p>Licenciatura en Urbanismo</p>
+                    <p style="margin-top: 10px; font-size: 0.9em;">En colaboración con <b>Encaje Territorial & Urbano</b></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/@turf/turf/turf.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
