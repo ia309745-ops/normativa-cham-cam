@@ -27,6 +27,10 @@
         <button id="btn-ubicacion" title="Encuéntrate">
             <i class="fa-solid fa-location-dot"></i>
         </button>
+        <div id="transparency-control">
+            <label for="opacity-slider">Transparencia:</label>
+            <input type="range" id="opacity-slider" min="0" max="1" step="0.1" value="0.9">
+        </div>
     </div>
 
     <div id="global-dashboard">
@@ -58,8 +62,26 @@
                             font-weight: bold;
                             font-size: 0.9em;
                             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                            margin-bottom: 10px;
                         ">
                             <i class="fa-solid fa-street-view"></i> Ver en Google Maps
+                        </a>
+                        
+                        <a id="btn-tramites" 
+                           href="https://portales.municipiocampeche.gob.mx/#/portal" 
+                           target="_blank" 
+                           style="
+                            display: inline-block;
+                            background-color: #4CAF50;
+                            color: white;
+                            padding: 8px 15px;
+                            text-decoration: none;
+                            border-radius: 5px;
+                            font-weight: bold;
+                            font-size: 0.9em;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                        ">
+                            <i class="fa-solid fa-file-invoice"></i> Trámites más populares
                         </a>
                     </div>
                 </div>
@@ -75,8 +97,6 @@
                 <h2>Información del Visor</h2>
                 <h3>Objetivo: Transparencia y Acceso a la Información</h3>
                 <p>Este Geovisualizador tiene como propósito fundamental <b>democratizar el acceso a la información urbana</b> de Champotón. Buscamos transformar la normativa técnica de uso de suelo en una herramienta interactiva, visual y fácil de comprender para toda la ciudadanía.</p>
-                <p>Al hacer pública y accesible esta información, fomentamos la transparencia en la gestión territorial y empoderamos a los habitantes para tomar decisiones informadas sobre su entorno y propiedad.</p>
-                
                 <h3>Fuente de Datos</h3>
                 <p>La información geoespacial, la zonificación y la normativa aquí representadas han sido procesadas y estructuradas por:</p>
                 <div style="background: #f4f4f4; padding: 10px; border-left: 4px solid #1976D2; margin: 10px 0;">

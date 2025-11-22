@@ -29,8 +29,16 @@ html, body {
 /* --- Mapa --- */
 #map { position: absolute; top: 60px; left: 0; width: 100%; height: calc(100% - 60px); z-index: 1; }
 
-/* --- Botón de Ubicación --- */
-#left-controls { position: absolute; top: 75px; left: 12px; z-index: 1000; }
+/* --- Controles Izquierdos (NUEVO FLEXBOX) --- */
+#left-controls { 
+    position: absolute; 
+    top: 75px; 
+    left: 12px; 
+    z-index: 1000; 
+    display: flex; /* Alineación horizontal */
+    align-items: center;
+    gap: 8px; /* Espacio entre el botón y el slider */
+}
 #btn-ubicacion {
     width: 32px; height: 32px;
     background: #fff; color: #333;
@@ -41,7 +49,30 @@ html, body {
     transition: all 0.2s;
 }
 #btn-ubicacion:hover { background: #f4f4f4; color: #007bff; }
-.leaflet-top.leaflet-left { margin-top: 50px; z-index: 999; }
+.leaflet-top.leaflet-left { margin-top: 50px; z-index: 999; } /* Ajuste de margen para Leaflet */
+
+/* --- Control de Transparencia (Ajustado a la nueva posición) --- */
+#transparency-control {
+    background: white;
+    padding: 6px 10px; 
+    border-radius: 4px;
+    border: 2px solid rgba(0,0,0,0.2); /* Borde para que se vea como control Leaflet */
+    box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+    display: flex;
+    align-items: center;
+    font-size: 0.85em; 
+}
+#transparency-control label {
+    margin-right: 8px;
+    font-weight: 500;
+    color: #333;
+    white-space: nowrap;
+}
+#opacity-slider {
+    width: 80px; 
+    cursor: pointer;
+    margin: 0;
+}
 
 /* --- Dashboard Global --- */
 #global-dashboard {
@@ -51,8 +82,13 @@ html, body {
     max-height: 50vh; overflow-y: auto;
 }
 #global-dashboard h3 { 
-    margin-top: 0; color: #000000; 
-    border-bottom: 2px solid #eee; padding-bottom: 10px; font-weight: 700;
+    margin-top: 0; 
+    color: #000000; 
+    border-bottom: 2px solid #eee; 
+    padding-bottom: 10px; 
+    font-weight: 700;
+    font-size: 1.2em; /* Título consistente y más pequeño */
+    text-align: center; /* Centrar el título */
 }
 .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed #eee; }
 .stat-label { font-weight: bold; color: #333; width: 50%; }
@@ -67,10 +103,16 @@ html, body {
     max-height: calc(100vh - 350px); overflow-y: auto;
 }
 #info-default { color: #555; font-style: italic; text-align: center; }
-#info-panel h3 { margin: 0 0 10px 0; font-size: 1.4em; font-weight: bold; text-align: center; color: #333; }
+#info-panel h3 { 
+    margin: 0 0 10px 0; 
+    font-size: 1.2em; /* Título consistente y más pequeño */
+    font-weight: bold; 
+    text-align: center; /* Centrar el título */
+    color: #333; 
+}
 #info-panel p { margin: 8px 0; font-size: 0.95em; color: #444; word-wrap: break-word; }
 
-/* --- Modal Overlay --- */
+/* --- Modal Overlay (Sin cambios mayores) --- */
 #modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.6); z-index: 2000;
@@ -94,5 +136,6 @@ html, body {
 #submit-rating-btn { width: 100%; padding: 10px; background: #238b45; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
 #rating-note { font-size: 0.8em; color: #777; font-style: italic; display: block; margin-top: 10px; }
 
+/* Control de capas base de Leaflet */
 .leaflet-bottom.leaflet-left { bottom: 30px; left: 15px; z-index: 999; }
 .leaflet-control-layers { border-radius: 8px !important; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }

@@ -5,11 +5,18 @@ var map = L.map('map', { zoomControl: true }).setView(centroChampoton, 14);
 // --- CAPAS BASE ---
 var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OSM' });
 var cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, attribution: '© CARTO' });
+var cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, attribution: '© CARTO' }); // Asegúrate de que esta línea exista
 var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles © Esri' });
 
 osm.addTo(map); // Capa por defecto
-L.control.layers({ "Calles": osm, "Claro": cartoLight, "Satélite": satellite }, null, { position: 'bottomleft' }).addTo(map);
 
+// REEMPLAZAR ESTE CONTROL DE CAPAS:
+L.control.layers({ 
+    "Calles": osm, 
+    "Claro": cartoLight, 
+    "Oscuro": cartoDark,  /* <-- AGREGAMOS ESTA OPCIÓN */
+    "Satélite": satellite 
+}, null, { position: 'bottomleft' }).addTo(map);
 // --- 2. VARIABLES GLOBALES ---
 var usoData = null; // Cambié el nombre de variable para ser consistente
 var geojsonLayer; 
@@ -213,6 +220,22 @@ document.getElementById('btn-ubicacion').addEventListener('click', function() {
         map.setView(loc, 16);
         L.marker(loc).addTo(map).bindPopup("<b>¡Estás aquí!</b>").openPopup();
     });
+});
+
+// --- 8. CONTROL DE TRANSPARENCIA ---
+document.getElementById('opacity-slider').addEventListener('input', function(e) {
+    var nuevaOpacidad = parseFloat(e.target.value);
+    
+    if (geojsonLayer) {
+        geojsonLayer.eachLayer(function(layer) {
+            // Actualizamos el estilo de cada polígono
+            layer.setStyle({
+                fillOpacity: nuevaOpacidad,
+                // Si la opacidad es 0, ocultamos también el borde, si no, lo dejamos tenue (0.4)
+                opacity: nuevaOpacidad > 0.1 ? 0.4 : 0 
+            });
+        });
+    }
 });
 
 map.on('click', function() { resetHighlight(); });
