@@ -1,271 +1,398 @@
-// --- 1. INICIALIZACIÓN DEL MAPA ---
-var centroChampoton = [19.3510, -90.7226]; 
-var map = L.map('map', { zoomControl: true }).setView(centroChampoton, 14);
-
-// --- CAPAS BASE ---
-var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OSM' });
-var cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, attribution: '© CARTO' });
-var cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, attribution: '© CARTO' }); // Asegúrate de que esta línea exista
-var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles © Esri' });
-
-osm.addTo(map); // Capa por defecto
-
-// REEMPLAZAR ESTE CONTROL DE CAPAS:
-L.control.layers({ 
-    "Calles": osm, 
-    "Claro": cartoLight, 
-    "Oscuro": cartoDark,  /* <-- AGREGAMOS ESTA OPCIÓN */
-    "Satélite": satellite 
-}, null, { position: 'bottomleft' }).addTo(map);
-// --- 2. VARIABLES GLOBALES ---
-var usoData = null; // Cambié el nombre de variable para ser consistente
-var geojsonLayer; 
-var selectedLayer = null; 
-
-// Elementos DOM
-var infoDefault = document.getElementById('info-default');
-var infoPanel = document.getElementById('info-panel');
-var usoSueloEl = document.getElementById('dash-uso-suelo'); 
-var areaM2El = document.getElementById('dash-area-m2');   
-var areaHaEl = document.getElementById('dash-area-ha');   
-var modalOverlay = document.getElementById('modal-overlay');
-var modalCloseBtn = document.getElementById('modal-close-btn');
-
-// --- DICCIONARIO DE USOS DE SUELO ---
-const descripciones = {
-    "AV": "Área Verde",
-    "CS": "Comercio y Servicio",
-    "CUC": "Corredor Urbano Champotón",
-    "CUCO": "Corredor Urbano Costero",
-    "Centro His": "Centro Histórico",
-    "E": "Equipamiento",
-    "HM/4/20": "Habitacional Mixto",
-    "I": "Industrial",
-    "Urbanizabl": "Urbanizable",
-    "VS": "Vivienda Social",
-    "EA": "Espacio Abierto" 
+// --- 1. CONFIGURACIÓN ---
+const ZONIFICACION = {
+    // Nota: He eliminado "EA" de aquí para que no salga en el menú de filtros
+    "AV":          { color: '#166e19', nombre: "Área Verde" },
+    "CS":          { color: '#ca3a6a', nombre: "Comercio y Servicio" },
+    "CUC":         { color: '#d63c0d', nombre: "Corredor Urbano" },
+    "CUCO":        { color: '#a51c1c', nombre: "Corredor Urbano Costero" },
+    "Centro His":  { color: '#855e4f', nombre: "Centro Histórico" },
+    "E":           { color: '#166aaf', nombre: "Equipamiento" },
+    "HM/4/20":     { color: '#e6c42c', nombre: "Habitacional Mixto" },
+    "I":           { color: '#881e9b', nombre: "Industrial" },
+    "Urbanizabl":  { color: '#CFD8DC', nombre: "Urbanizable" },
+    "VS":          { color: '#ffc061', nombre: "Vivienda Social" },
+    "DEFAULT":     { color: '#9E9E9E', nombre: "Sin Definir" }
 };
 
-// --- FUNCIÓN DE PALETA DE COLORES ---
-function getColor(uso) {
-    switch (uso) {
-        case 'HM/4/20': return '#FDD835'; // Amarillo Oru
-        case 'VS': return '#FFB74D';      // Naranja Claro
-        case 'Centro His': return '#8D6E63'; // Marrón
-        case 'CS': return '#EC407A';      // Rosa Mexicano
-        case 'CUC': return '#FF5722';     // Naranja Intenso
-        case 'CUCO': return '#D32F2F';    // Rojo Oscuro
-        case 'AV': return '#4CAF50';      // Verde
-        case 'E': return '#2196F3';       // Azul
-        case 'I': return '#9C27B0';       // Púrpura
-        case 'Urbanizabl': return '#CFD8DC'; // Gris Claro
-        case 'EA': return '#009688';      // Verde Azulado
-        default: return '#cccccc';        // Gris neutro
+// --- MATRIZ DE COMPATIBILIDAD (Datos procesados de tu Excel) ---
+const MATRIZ_COMPATIBILIDAD = {
+    "H2": {
+        "permitido": ["Vivienda Unifamiliar (1 viv/lote)", "Vivienda Bifamiliar (2 viv/lote)", "Comercio Vecinal", "Servicios Básicos", "Áreas Verdes y Parques"],
+        "condicionado": ["Vivienda Plurifamiliar (3+ viv/lote)", "Comercio Barrial", "Escuelas (Básica)", "Consultorios Médicos"],
+        "prohibido": ["Comercio Distrital/Central", "Servicios Especializados", "Talleres y Reparaciones", "Industria (Cualquier tipo)", "Hospitales", "Centros de Espectáculos", "Gasolineras"]
+    },
+    "H4": {
+        "permitido": ["Vivienda Unifamiliar", "Vivienda Bifamiliar", "Vivienda Plurifamiliar (Media densidad)", "Comercio Vecinal", "Comercio Barrial", "Servicios Básicos", "Escuelas (Básica)"],
+        "condicionado": ["Comercio Distrital", "Oficinas Pequeñas", "Talleres Artesanales (Bajo Impacto)", "Iglesias/Templos"],
+        "prohibido": ["Industria", "Bodegas Grandes", "Centros Nocturnos", "Gasolineras", "Hospitales Regionales"]
+    },
+    "HM": { // Aplica para HM/4/20 y similares
+        "permitido": ["Vivienda (Todo tipo)", "Comercio Vecinal", "Comercio Barrial", "Comercio Distrital", "Oficinas y Servicios Profesionales", "Hoteles y Moteles", "Escuelas (Todos los niveles)", "Hospitales y Clínicas"],
+        "condicionado": ["Talleres Mecánicos", "Centros de Espectáculos", "Gasolineras", "Bodegas de Distribución"],
+        "prohibido": ["Industria Mediana/Pesada", "Rellenos Sanitarios", "Usos de Alto Riesgo"]
+    },
+    "CUC": { // Corredor Urbano
+        "permitido": ["Comercio (Todo tipo)", "Servicios Especializados", "Oficinas Corporativas", "Hoteles", "Centros Comerciales", "Equipamiento Regional", "Vivienda Vertical (Alta densidad)"],
+        "condicionado": ["Gasolineras", "Talleres de Servicio", "Industria Ligera (No contaminante)"],
+        "prohibido": ["Industria Pesada", "Vivienda Unifamiliar Aislada", "Granjas/Agropecuario"]
+    },
+    "CUCO": { // Corredor Costero
+        "permitido": ["Hoteles y Resorts", "Restaurantes y Bares Turísticos", "Comercio Turístico", "Clubes de Playa", "Vivienda Vacacional/Turística", "Marinas y Muelles"],
+        "condicionado": ["Vivienda Permanente", "Comercio General"],
+        "prohibido": ["Industria", "Talleres", "Bodegas", "Usos que obstruyan vista al mar"]
+    },
+    "I": { // Industria
+        "permitido": ["Industria Ligera", "Industria Mediana", "Bodegas y Almacenes", "Parques Industriales", "Talleres Mayores", "Logística y Transporte"],
+        "condicionado": ["Industria Pesada (Sujeto a MIA)", "Comercio de Insumos Industriales", "Oficinas Administrativas de la Industria"],
+        "prohibido": ["Vivienda", "Escuelas", "Hospitales", "Hoteles", "Comercio Turístico"]
+    },
+    "E": { // Equipamiento
+        "permitido": ["Edificios Públicos", "Escuelas y Universidades", "Hospitales", "Centros Culturales/Deportivos", "Terminales de Transporte", "Mercados Públicos"],
+        "condicionado": ["Comercio de Apoyo (Cafeterías, Librerías)", "Vivienda para Conserjes/Vigilancia"],
+        "prohibido": ["Industria", "Bares y Cantinas", "Vivienda General"]
+    },
+    "AV": { // Áreas Verdes / Espacios Abiertos
+        "permitido": ["Parques y Jardines", "Plazas Cívicas", "Instalaciones Deportivas al Aire Libre", "Conservación Ecológica", "Viveros"],
+        "condicionado": ["Kioscos y Pequeño Comercio (Bebidas/Alimentos)", "Baños Públicos", "Instalaciones Temporales (Ferias)"],
+        "prohibido": ["Vivienda", "Industria", "Comercio Establecido Grande", "Cualquier edificación permanente invasiva"]
     }
+    // Nota: Si un código no está aquí, el sistema asumirá prohibición general.
+};
+
+// --- 2. MAPA Y CONTROLES ---
+// Inicializamos el mapa con ZOOM 16 (Más cerca, como pediste)
+var map = L.map('map', { zoomControl: false }).setView([19.34, -90.71], 14);
+
+// 2º Definimos los Mapas Base
+var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map); // .addTo(map) hace que este sea el predeterminado
+
+var sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri'
+});
+
+var dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; CARTO'
+});
+
+// 3º Control de Capas (Arriba a la derecha)
+L.control.layers({ 
+    "Callejero (OSM)": osm, 
+    "Satélite": sat,
+    "Modo Oscuro": dark 
+}, null, { position: 'topright' }).addTo(map);
+
+// 2º AGREGAMOS BOTÓN GPS (Para que quede EN MEDIO)
+var GpsControl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function(map) {
+        var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+        var btn = L.DomUtil.create('a', '', container);
+        btn.href = "#";
+        btn.title = "Mi Ubicación";
+        btn.innerHTML = '<i class="fa-solid fa-location-crosshairs" style="font-size:1.2em; line-height:30px;"></i>';
+        btn.style.backgroundColor = "white";
+        btn.style.width = "30px";
+        btn.style.height = "30px";
+        btn.style.display = "block";
+        btn.style.textAlign = "center";
+        btn.onclick = function(e) {
+            e.preventDefault();
+            if(!navigator.geolocation) { alert("GPS no soportado"); return; }
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; 
+            navigator.geolocation.getCurrentPosition(pos => {
+                var lat = pos.coords.latitude;
+                var lng = pos.coords.longitude;
+                map.setView([lat, lng], 16);
+                L.marker([lat, lng]).addTo(map).bindPopup("Estás aquí").openPopup();
+                btn.innerHTML = '<i class="fa-solid fa-location-dot" style="color:#106b3d;"></i>';
+            }, () => {
+                alert("No se pudo obtener ubicación");
+                btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i>';
+            });
+        };
+        return container;
+    }
+});
+map.addControl(new GpsControl());
+
+// 3º AGREGAMOS ZOOM (Para que quede ABAJO)
+L.control.zoom({ position: 'topright' }).addTo(map);
+
+
+// --- 3. VARIABLES GLOBALES ---
+var usoData = null;
+var geojsonLayer;
+var estadoFiltros = {};
+var currentOpacity = 0.9;
+var selectedLayer = null;
+
+// --- 4. LÓGICA DE DATOS ("TRUCO" DE FUSIÓN EA -> AV) ---
+
+// Función auxiliar para normalizar el código (Aquí ocurre la magia de la fusión)
+function normalizarCodigo(codigoOriginal) {
+    var cod = codigoOriginal ? codigoOriginal.trim() : "DEFAULT";
+    // Si es "EA" (Espacio Abierto), lo transformamos en "AV" (Área Verde)
+    if (cod === "EA") return "AV";
+    return cod;
 }
 
-// --- 3. ESTILOS (CON CONTORNO TENUE) ---
+function getColor(codigo) { 
+    var cod = normalizarCodigo(codigo);
+    return (ZONIFICACION[cod] || ZONIFICACION['DEFAULT']).color; 
+}
+
+function getNombreUso(codigo) { 
+    var cod = normalizarCodigo(codigo);
+    return (ZONIFICACION[cod] || ZONIFICACION['DEFAULT']).nombre; 
+}
+
 function style(feature) {
-    return { 
-        fillColor: getColor(feature.properties['Uso/suelo']), 
-        stroke: true,         // Activamos el borde
-        color: '#ffffff',     // Color blanco
-        weight: 0.5,          // Muy delgado
-        opacity: 0.4,         // Transparente (tenue)
-        fillOpacity: 0.9, 
-        interactive: true 
+    return {
+        fillColor: getColor(feature.properties['Uso/suelo']),
+        weight: 0.2, 
+        opacity: 0.4, 
+        color: 'white',
+        fillOpacity: currentOpacity
     };
 }
 
-var highlightStyle = { 
-    weight: 4, 
-    color: '#FFFF00', 
-    dashArray: '', 
-    fillOpacity: 1,
-    stroke: true,
-    opacity: 1 
-};
-
-// --- 4. FUNCIONES AUXILIARES ---
-
-function updatePanel(props, center) {
-    var codigo = props['Uso/suelo'];
-    var nombreCompleto = descripciones[codigo] || codigo;
-
-    usoSueloEl.innerHTML = `<b>Uso/Suelo:</b> ${codigo || "No definido"}`; 
-    areaM2El.innerHTML = `<b>Área:</b> ${parseFloat(props['Área m2']).toLocaleString('es-MX', { maximumFractionDigits: 2 }) || "0"} m²`;
-    areaHaEl.innerHTML = `<b>Área:</b> ${parseFloat(props['Área Ha']).toFixed(3) || "0"} ha`;
-    
-    document.getElementById('dash-titulo').innerText = nombreCompleto;
-
-    // Botón Google Maps
-    if (center) {
-        var lat = center.lat;
-        var lng = center.lng;
-        var gmapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
-        var btnGmaps = document.getElementById('btn-gmaps');
-        if (btnGmaps) {
-            btnGmaps.href = gmapsUrl;
-        }
-    }
-
-    infoDefault.style.display = 'none';
-    infoPanel.style.display = 'block';
-}
-
-function resetHighlight() {
-    if (selectedLayer) {
-        geojsonLayer.resetStyle(selectedLayer);
-        selectedLayer = null;
-    }
-    infoDefault.style.display = 'block';
-    infoPanel.style.display = 'none';
-}
+var highlightStyle = { weight: 3, color: '#00FFFF', fillOpacity: 0.8 };
 
 // --- 5. RENDERIZADO DEL MAPA ---
-function renderMap(featuresToRender) {
-    resetHighlight();
-    if (geojsonLayer) map.removeLayer(geojsonLayer);
-    
-    geojsonLayer = L.geoJSON(featuresToRender, {
+function renderMap() {
+    if(geojsonLayer) map.removeLayer(geojsonLayer);
+    if (!usoData) return;
+
+    geojsonLayer = L.geoJSON(usoData, {
+        renderer: L.canvas(), 
         style: style,
-        onEachFeature: function (feature, layer) {
-            layer.on('click', function (e) {
+        
+        filter: function(feature) {
+            // Usamos el código normalizado para filtrar
+            // Así, si desactiva "Área Verde", también se ocultan los "Espacio Abierto"
+            var cod = normalizarCodigo(feature.properties['Uso/suelo']);
+            return estadoFiltros[cod] !== false;
+        },
+        
+        onEachFeature: function(feature, layer) {
+            var cod = feature.properties['Uso/suelo'];
+            // Tooltip muestra el nombre "Área Verde" incluso si es "EA" en los datos originales
+            layer.bindTooltip(getNombreUso(cod), { sticky: true, direction: 'top' });
+            
+            layer.on('click', function(e) {
                 L.DomEvent.stopPropagation(e);
-                resetHighlight();
+                if (selectedLayer) geojsonLayer.resetStyle(selectedLayer);
+                
                 selectedLayer = e.target;
                 selectedLayer.setStyle(highlightStyle);
                 selectedLayer.bringToFront();
                 
-                updatePanel(feature.properties, layer.getBounds().getCenter());
+                updateInfoPanel(feature.properties, layer.getBounds());
                 
-                map.fitBounds(selectedLayer.getBounds(), { padding: [20, 20] });
+                var btnDetalle = document.querySelector('.nav-btn[data-target="panel-detalle"]');
+                if(btnDetalle) btnDetalle.click();
+                map.fitBounds(layer.getBounds(), {padding:[50,50], maxZoom: 17});
             });
-            
-            // Popup simple
-            var nom = descripciones[feature.properties['Uso/suelo']] || feature.properties['Uso/suelo'];
-            layer.bindPopup(`<b>${nom}</b><br>${parseFloat(feature.properties['Área Ha']).toFixed(3)} ha`);
         }
     }).addTo(map);
 }
 
-// --- 6. CARGA DE DATOS (NOMBRE ACTUALIZADO A uso.geojson) ---
-async function cargarDatos() {
-    try {
-        // AQUÍ ESTÁ EL CAMBIO IMPORTANTE
-        const response = await fetch('uso.geojson'); 
+// --- 6. ACTUALIZACIÓN DE PANELES ---
+function updateInfoPanel(props, bounds) {
+    document.getElementById('info-default').style.display = 'none';
+    document.getElementById('info-panel').style.display = 'block';
+    
+    // 1. Datos Básicos
+    var codOriginal = props['Uso/suelo'];
+    
+    // Lógica para buscar en la matriz (usando la raíz del código si es necesario)
+    var claveMatriz = codOriginal.split('/')[0]; 
+    if (!MATRIZ_COMPATIBILIDAD[claveMatriz]) claveMatriz = codOriginal;
+    
+    var nombreUso = getNombreUso(codOriginal);
+    
+    document.getElementById('dash-titulo').innerText = nombreUso;
+    document.getElementById('dash-uso-suelo').innerText = codOriginal;
+    
+    var area = parseFloat(props['Área Ha']);
+    document.getElementById('dash-area-ha').innerText = isNaN(area) ? '0' : area.toFixed(4);
+    
+    // 2. Generar Contenido Dinámico (Botones + Compatibilidad + Aviso)
+    var containerBtn = document.querySelector('.action-buttons-container');
+    
+    if(bounds) {
+        var center = bounds.getCenter();
         
-        if (!response.ok) throw new Error("Falta 'uso.geojson' o error de carga");
-        const data = await response.json();
-        usoData = data;
-
-        renderMap(usoData);
+        // A. Botones de Acción
+        var htmlBotones = `
+            <div class="btn-group-vertical">
+                <a href="http://googleusercontent.com/maps.google.com/maps?q=${center.lat},${center.lng}" 
+                   target="_blank" class="btn-action google">
+                   <i class="fa-solid fa-map-location-dot"></i> Ver en Google Maps
+                </a>
+                <a href="https://portales.municipiocampeche.gob.mx/#/portal" 
+                   target="_blank" class="btn-action tramites">
+                   <i class="fa-solid fa-file-signature"></i> Trámites Municipales
+                </a>
+            </div>
+        `;
         
-        // Cálculos
-        var statsPorUso = {};
-        var granTotalPredios = 0;
-        var granTotalHa = 0;
+        // B. Sección de Compatibilidad
+        var datosCompatibilidad = MATRIZ_COMPATIBILIDAD[claveMatriz];
+        var htmlCompatibilidad = "";
 
-        usoData.features.forEach(function(feature) {
-            var uso = feature.properties['Uso/suelo'] || "Sin Definir";
-            var areaHa = parseFloat(feature.properties['Área Ha']) || 0;
+        if (datosCompatibilidad) {
+            const crearLista = (items, icono, clase) => {
+                if (!items || items.length === 0) return "";
+                return `
+                    <div class="compat-section">
+                        <h5 class="${clase}"><i class="${icono}"></i> ${clase.toUpperCase()}</h5>
+                        <ul>${items.map(i => `<li>${i}</li>`).join('')}</ul>
+                    </div>
+                `;
+            };
 
-            granTotalPredios++;
-            granTotalHa += areaHa;
-
-            if (!statsPorUso[uso]) { statsPorUso[uso] = { count: 0, totalHa: 0 }; }
-            statsPorUso[uso].count++;
-            statsPorUso[uso].totalHa += areaHa;
-        });
-
-        // Dashboard Global
-        var container = document.getElementById('stats-container');
-        var htmlContent = `
-            <div class="stat-row" style="background-color: #e3f2fd; border-bottom: 2px solid #1976D2; margin-bottom: 8px; padding: 10px;">
-                <div class="stat-label" style="font-size: 1.1em; color: #1565C0;">TOTAL GLOBAL</div>
-                <div class="stat-values">
-                    <strong style="font-size: 1.2em; color: #000;">${granTotalPredios.toLocaleString()} predios</strong>
-                    <span style="font-weight: bold; color: #333;">${granTotalHa.toFixed(2)} Ha</span>
+            htmlCompatibilidad = `
+                <div class="compatibilidad-container">
+                    <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+                    <h4 style="color:#333; margin-bottom:10px; font-size:0.9rem;">Compatibilidad de Usos</h4>
+                    ${crearLista(datosCompatibilidad.permitido, "fa-solid fa-check", "permitido")}
+                    ${crearLista(datosCompatibilidad.condicionado, "fa-solid fa-triangle-exclamation", "condicionado")}
+                    ${crearLista(datosCompatibilidad.prohibido, "fa-solid fa-ban", "prohibido")}
                 </div>
+            `;
+        } else {
+            htmlCompatibilidad = `<div class="compatibilidad-container"><hr><p style="color:#999; font-style:italic; font-size:0.8rem;">Sin información de compatibilidad específica para esta zona.</p></div>`;
+        }
+
+        // C. Aviso Legal
+        var htmlAviso = `
+            <div style="margin-top: 20px; padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px; font-size: 0.75rem; color: #856404;">
+                <i class="fa-solid fa-circle-info"></i>
+                <strong>Nota Legal:</strong> La información mostrada es de carácter indicativo. Para trámites oficiales y validación normativa, consulte directamente a la <b>Dirección de Desarrollo Urbano</b>.
             </div>
         `;
 
-        Object.keys(statsPorUso).sort().forEach(function(uso) {
-            var data = statsPorUso[uso];
-            var nombreMostrar = descripciones[uso] || uso;
-            htmlContent += `
-                <div class="stat-row">
-                    <div class="stat-label" title="${uso}">${nombreMostrar}</div>
-                    <div class="stat-values">
-                        <strong>${data.count.toLocaleString()} predios</strong>
-                        ${data.totalHa.toFixed(2)} Ha
-                    </div>
-                </div>
-            `;
-        });
-        container.innerHTML = htmlContent;
-        
-    } catch (error) {
-        console.error(error);
-        alert("¡Error cargando datos!\n" + error.message);
+        // D. Inserción Final (Unimos las 3 partes)
+        containerBtn.innerHTML = htmlBotones + htmlCompatibilidad + htmlAviso;
     }
 }
 
-cargarDatos(); // Iniciar
+// --- 7. CARGA Y ESTADÍSTICAS ---
+async function cargarDatos() {
+    const statusEl = document.getElementById('stats-container');
+    statusEl.innerHTML = '<p style="padding:10px;"><i class="fa-solid fa-spinner fa-spin"></i> Cargando mapa...</p>';
 
-// --- 7. UI EVENTS ---
-document.getElementById('btn-ubicacion').addEventListener('click', function() {
-    navigator.geolocation.getCurrentPosition(function(position) {
-        var loc = [position.coords.latitude, position.coords.longitude];
-        map.setView(loc, 16);
-        L.marker(loc).addTo(map).bindPopup("<b>¡Estás aquí!</b>").openPopup();
+    try {
+        const response = await fetch('uso.geojson');
+        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+        usoData = await response.json();
+        
+        statusEl.innerHTML = ''; 
+        generarControles();
+        renderMap();
+        calcularEstadisticas();
+        
+        if (geojsonLayer) {
+            map.fitBounds(geojsonLayer.getBounds());
+        }
+
+    } catch (error) {
+        console.error(error);
+        statusEl.innerHTML = '<div style="padding:15px; color:red;">Error cargando datos.</div>';
+    }
+}
+
+function generarControles() {
+    var container = document.getElementById('capas-container');
+    container.innerHTML = '';
+    Object.keys(ZONIFICACION).forEach(key => {
+        if(key === 'DEFAULT') return;
+        
+        estadoFiltros[key] = true;
+        var div = document.createElement('div');
+        div.className = 'layer-control-row';
+        div.innerHTML = `
+            <input type="checkbox" checked id="chk-${key}" style="margin-right:8px; cursor:pointer;">
+            <span style="width:12px;height:12px;background:${ZONIFICACION[key].color};margin-right:8px;display:inline-block;border-radius:50%"></span>
+            <label for="chk-${key}" style="cursor:pointer;font-size:0.9em;user-select:none;">${ZONIFICACION[key].nombre}</label>
+        `;
+        div.querySelector('input').addEventListener('change', (e) => {
+            estadoFiltros[key] = e.target.checked;
+            renderMap();
+        });
+        container.appendChild(div);
     });
-});
+}
 
-// --- 8. CONTROL DE TRANSPARENCIA ---
-document.getElementById('opacity-slider').addEventListener('input', function(e) {
-    var nuevaOpacidad = parseFloat(e.target.value);
+function calcularEstadisticas() {
+    var counts = {};
+    var total = 0;
+    usoData.features.forEach(f => {
+        // Usamos normalizarCodigo aquí también para sumar "EA" dentro de "AV"
+        var c = normalizarCodigo(f.properties['Uso/suelo']);
+        counts[c] = (counts[c] || 0) + 1;
+        total++;
+    });
     
-    if (geojsonLayer) {
-        geojsonLayer.eachLayer(function(layer) {
-            // Actualizamos el estilo de cada polígono
-            layer.setStyle({
-                fillOpacity: nuevaOpacidad,
-                // Si la opacidad es 0, ocultamos también el borde, si no, lo dejamos tenue (0.4)
-                opacity: nuevaOpacidad > 0.1 ? 0.4 : 0 
-            });
+    var html = `<div style="padding:10px; background:#e3f2fd; margin-bottom:10px;"><b>Total Predios:</b> ${total.toLocaleString()}</div>`;
+    for (var key in counts) {
+        // Solo mostramos los que están en nuestra configuración ZONIFICACION
+        if (ZONIFICACION[key]) {
+            var nombre = ZONIFICACION[key].nombre;
+            var color = ZONIFICACION[key].color;
+            html += `<div class="stat-row"><span style="border-left: 4px solid ${color}; padding-left:5px;">${nombre}</span><strong>${counts[key]}</strong></div>`;
+        }
+    }
+    document.getElementById('stats-container').innerHTML = html;
+}
+
+// --- 8. EVENTOS DOM ---
+document.addEventListener('DOMContentLoaded', function() {
+    cargarDatos();
+
+    const slider = document.getElementById('opacity-slider');
+    if(slider) {
+        slider.addEventListener('input', (e) => {
+            currentOpacity = e.target.value;
+            if(geojsonLayer) geojsonLayer.setStyle(style);
         });
     }
-});
 
-map.on('click', function() { resetHighlight(); });
-
-// Modales
-document.querySelectorAll('#main-header .tab-link').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-        e.preventDefault();
-        var id = this.getAttribute('data-tab');
-        var targetModal = document.getElementById(id);
-        if (targetModal) {
-            modalOverlay.style.display = 'flex';
-            document.querySelectorAll('.modal-tab-pane').forEach(p => p.classList.remove('active'));
-            targetModal.classList.add('active');
-        }
+    const sidebar = document.getElementById('sidebar-content');
+    document.querySelectorAll('.nav-btn[data-target]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.sidebar-pane').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.target).classList.add('active');
+            if(sidebar.classList.contains('collapsed')) sidebar.classList.remove('collapsed');
+        });
     });
-});
+    
+    var toggleBtn = document.getElementById('toggle-sidebar-btn');
+    if(toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+        });
+    }
 
-modalCloseBtn.addEventListener('click', () => modalOverlay.style.display = 'none');
-modalOverlay.addEventListener('click', (e) => { if(e.target === modalOverlay) modalOverlay.style.display = 'none'; });
-
-// Estrellas
-var stars = document.querySelectorAll('#modal-tab-calificar .rating-stars .fa-star');
-stars.forEach(function(star) {
-    star.addEventListener('click', function() {
-        var rating = this.getAttribute('data-value');
-        stars.forEach(function(s) { s.classList.remove('selected'); });
-        for (var i = 0; i < rating; i++) { stars[i].classList.add('selected'); }
+    // Modales
+    const overlay = document.getElementById('modal-overlay');
+    document.querySelectorAll('.tab-link').forEach(btn => {
+        btn.addEventListener('click', () => overlay.style.display = 'flex');
     });
+    document.getElementById('modal-close-btn').addEventListener('click', () => overlay.style.display = 'none');
 });
-document.getElementById('submit-rating-btn').addEventListener('click', function() {
-    alert('¡Gracias por calificar el visor!');
-});
+
+function toggleTodosFiltros(activar) {
+    document.querySelectorAll('#capas-container input').forEach(chk => {
+        chk.checked = activar;
+        var key = chk.id.replace('chk-', '');
+        estadoFiltros[key] = activar;
+    });
+    renderMap();
+}

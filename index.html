@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zonificación Urbana de Champotón</title>
+    <title>Zonificación Secundaria de Champotón</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,142 +12,139 @@
 <body>
 
     <header id="main-header">
-        <h1 id="header-title">Zonificación Urbana de Champotón</h1>
+        <div class="header-logo">
+            <i class="fa-solid fa-map-location-dot"></i>
+            <h1 id="header-title">Uso de suelo en Champotón</h1>
+        </div>
         <nav class="tabs">
-            <button class="tab-link" data-tab="modal-tab-info">Información</button>
-            <button class="tab-link" data-tab="modal-tab-web">Sitios Web</button>
-            <button class="tab-link" data-tab="modal-tab-calificar">Calificar Visor</button>
-            <button class="tab-link" data-tab="modal-tab-contacto">Contacto</button> 
+            <button class="tab-link" onclick="openModal('modal-info')">Información</button>
+            <button class="tab-link" onclick="openModal('modal-contacto')">Contacto</button> 
         </nav>
     </header>
 
-    <div id="map"></div> 
+    <div id="layout-container">
+        
+        <nav id="sidebar-nav">
+            <div class="nav-group">
+                <button class="nav-btn active" data-target="panel-diagnostico" title="Diagnóstico General">
+                    <i class="fa-solid fa-chart-pie"></i>
+                </button>
+                <button class="nav-btn" data-target="panel-detalle" title="Ficha del Predio">
+                    <i class="fa-solid fa-house-chimney"></i>
+                </button>
+                <button class="nav-btn" data-target="panel-capas" title="Capas y Filtros">
+                    <i class="fa-solid fa-layer-group"></i>
+                </button>
+            </div>
+            
+            <div class="nav-group bottom">
+                <button id="toggle-sidebar-btn" class="nav-btn" title="Ocultar Panel">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+            </div>
+        </nav>
 
-    <div id="left-controls">
-        <button id="btn-ubicacion" title="Encuéntrate">
-            <i class="fa-solid fa-location-dot"></i>
-        </button>
-        <div id="transparency-control">
-            <label for="opacity-slider">Transparencia:</label>
-            <input type="range" id="opacity-slider" min="0" max="1" step="0.1" value="0.9">
-        </div>
-    </div>
+        <aside id="sidebar-content">
+            
+            <div id="panel-diagnostico" class="sidebar-pane active">
+                <div class="pane-header">
+                    <h3><i class="fa-solid fa-chart-pie"></i> Diagnóstico Global</h3>
+                </div>
+                <div id="stats-container" class="pane-body">
+                    <p style="color:#666; font-style:italic;">Cargando datos...</p>
+                </div>
+            </div>
 
-    <div id="global-dashboard">
-        <h3>Diagnóstico por Uso</h3>
-        <div id="stats-container">
-            <p>Cargando datos...</p>
-        </div>
-    </div>
-
-    <div id="dashboard">
-        <div id="tab-content">
-            <div id="tab-info" class="tab-pane active">
-                <p id="info-default">Selecciona una zona para ver sus detalles.</p>
-                
-                <div id="info-panel" style="display: none;">
-                    <h3 id="dash-titulo"></h3> 
-                    <p id="dash-uso-suelo"></p>
-                    <p id="dash-area-m2"></p>
-                    <p id="dash-area-ha"></p>
+            <div id="panel-detalle" class="sidebar-pane">
+                <div class="pane-header">
+                    <h3><i class="fa-solid fa-circle-info"></i> Ficha del Predio</h3>
+                </div>
+                <div class="pane-body">
+                    <div id="info-default">
+                        <div style="text-align:center; margin-top:50px; color:#999;">
+                            <i class="fa-solid fa-arrow-pointer" style="font-size:3rem; margin-bottom:10px;"></i>
+                            <p>Selecciona un predio en el mapa para ver su información.</p>
+                        </div>
+                    </div>
                     
-                    <div style="margin-top: 15px; text-align: center;">
-                        <a id="btn-gmaps" href="#" target="_blank" style="
-                            display: inline-block;
-                            background-color: #1976D2;
-                            color: white;
-                            padding: 8px 15px;
-                            text-decoration: none;
-                            border-radius: 5px;
-                            font-weight: bold;
-                            font-size: 0.9em;
-                            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-                            margin-bottom: 10px;
-                        ">
-                            <i class="fa-solid fa-street-view"></i> Ver en Google Maps
-                        </a>
-                        
-                        <a id="btn-tramites" 
-                           href="https://portales.municipiocampeche.gob.mx/#/portal" 
-                           target="_blank" 
-                           style="
-                            display: inline-block;
-                            background-color: #4CAF50;
-                            color: white;
-                            padding: 8px 15px;
-                            text-decoration: none;
-                            border-radius: 5px;
-                            font-weight: bold;
-                            font-size: 0.9em;
-                            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-                        ">
-                            <i class="fa-solid fa-file-invoice"></i> Trámites más populares
-                        </a>
+                    <div id="info-panel" style="display: none;"> 
+                         <h4 id="dash-titulo" class="ficha-title" style="color:#0c414e; border-bottom:2px solid #FDD835; padding-bottom:5px;">--</h4>
+                         
+                         <div class="ficha-grid">
+                             <div class="ficha-item">
+                                 <label>Uso de Suelo</label>
+                                 <span id="dash-uso-suelo">--</span>
+                             </div>
+                             <div class="ficha-item">
+                                 <label>Área (Ha)</label>
+                                 <span id="dash-area-ha">--</span>
+                             </div>
+                         </div>
+
+                         <div class="action-buttons-container"></div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div id="modal-overlay">
-        <div id="modal-container">
-            <button id="modal-close-btn">×</button>
+            <div id="panel-capas" class="sidebar-pane">
+                <div class="pane-header">
+                    <h3><i class="fa-solid fa-layer-group"></i> Capas</h3>
+                    <small onclick="toggleTodosFiltros(true)" style="cursor:pointer; color:#106b3d; font-weight:bold;">Ver todo</small>
+                </div>
+                <div class="pane-body">
+                    <div style="margin-bottom: 15px;">
+                        <label for="opacity-slider" style="display:block; margin-bottom:5px; font-size:0.9em;">Transparencia:</label>
+                        <input type="range" id="opacity-slider" min="0" max="1" step="0.1" value="0.6" style="width:100%">
+                    </div>
+                    <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
+                    
+                    <div id="capas-container"></div>
+                </div>
+            </div>
+
+        </aside>
+
+        <main id="map-container">
+            <div id="map"></div>
+            </main>
+
+    </div> 
+
+    <div id="modal-overlay" style="display:none;">
+        <div id="modal-content" style="background:white; padding:25px; border-radius:8px; max-width:500px; width:90%; position:relative; box-shadow:0 5px 15px rgba(0,0,0,0.3);">
+            <button onclick="document.getElementById('modal-overlay').style.display='none'" style="position:absolute; top:10px; right:15px; border:none; background:none; font-size:1.5rem; cursor:pointer;">&times;</button>
             
-            <div id="modal-tab-info" class="modal-tab-pane active">
-                <h2>Información del Visor</h2>
-                <h3>Objetivo: Transparencia y Acceso a la Información</h3>
-                <p>Este Geovisualizador tiene como propósito fundamental <b>democratizar el acceso a la información urbana</b> de Champotón. Buscamos transformar la normativa técnica de uso de suelo en una herramienta interactiva, visual y fácil de comprender para toda la ciudadanía.</p>
-                <h3>Fuente de Datos</h3>
-                <p>La información geoespacial, la zonificación y la normativa aquí representadas han sido procesadas y estructuradas por:</p>
-                <div style="background: #f4f4f4; padding: 10px; border-left: 4px solid #1976D2; margin: 10px 0;">
-                    <strong>Encaje Territorial & Urbano</strong>
-                </div>
-                
-                <h3>¿Qué muestra este mapa?</h3>
-                <p>El mapa visualiza la <b>Zonificación Secundaria</b> de la ciudad, indicando qué actividades (vivienda, comercio, industria, conservación) están permitidas en cada predio según la paleta de colores oficial.</p>
+            <div id="modal-info" class="modal-body" style="display:none;">
+                <h2 style="margin-top:0; color:#106b3d;">Información del Visor</h2>
+                <p>Esta herramienta permite visualizar la <b>Zonificación Secundaria</b> de Champotón.</p>
+                <p>Los datos son oficiales y provienen de <b>Encaje Territorial & Urbano</b>.</p>
             </div>
 
-            <div id="modal-tab-web" class="modal-tab-pane">
-                <h2>Sitios Web de Interés</h2>
-                <ul>
-                    <li><a href="https://www.encajeterritorialurbano.mx/" target="_blank"><i class="fa-solid fa-globe"></i> Encaje Territorial & Urbano</a></li>
-                    <li><a href="https://www.campeche.gob.mx/" target="_blank"><i class="fa-solid fa-building-columns"></i> Gobierno del Estado de Campeche</a></li>
-                    <li><a href="http://www.champoton.gob.mx/" target="_blank"><i class="fa-solid fa-landmark"></i> H. Ayuntamiento de Champotón</a></li>
-                </ul>
-            </div>
-
-            <div id="modal-tab-calificar" class="modal-tab-pane">
-                <h4>Califica este Geovisualizador</h4>
-                <p>¿Te ha sido útil esta herramienta para consultar el uso de suelo?</p>
-                <div class="rating-stars">
-                    <i class="fa-solid fa-star" data-value="1"></i>
-                    <i class="fa-solid fa-star" data-value="2"></i>
-                    <i class="fa-solid fa-star" data-value="3"></i>
-                    <i class="fa-solid fa-star" data-value="4"></i>
-                    <i class="fa-solid fa-star" data-value="5"></i>
-                </div>
-                <textarea id="comment-box" rows="4" placeholder="Escribe tu comentario o sugerencia..."></textarea>
-                <button id="submit-rating-btn">Enviar Opinión</button>
-                <small id="rating-note">Nota: Tu retroalimentación nos ayuda a mejorar la plataforma.</small>
-            </div>
-
-            <div id="modal-tab-contacto" class="modal-tab-pane">
-                <h2>Contacto y Desarrollo</h2>
-                <div class="contact-person">
-                    <h3>Urbanista Ismael Luna</h3>
-                    <p><i class="fa-solid fa-envelope"></i> <a href="mailto:ia309745@gmail.com">ia309745@gmail.com</a></p>
-                </div>
-                <div class="contact-affiliation">
-                    <p>Universidad Nacional Autónoma de México (UNAM)</p>
-                    <p>Licenciatura en Urbanismo</p>
-                    <p style="margin-top: 10px; font-size: 0.9em;">En colaboración con <b>Encaje Territorial & Urbano</b></p>
-                </div>
+            <div id="modal-contacto" class="modal-body" style="display:none;">
+                <h2 style="margin-top:0; color:#106b3d;">Contacto</h2>
+                <p><b>Desarrollado por:</b><br>Urbanista Ismael Luna</p>
+                <p>Universidad Nacional Autónoma de México (UNAM)</p>
+                <a href="mailto:ia309745@gmail.com" style="color:#0c414e; font-weight:bold;">ia309745@gmail.com</a>
             </div>
         </div>
     </div>
 
     <script src="https://unpkg.com/@turf/turf/turf.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
     <script src="script.js"></script>
+    
+    <script>
+        function openModal(id) {
+            document.getElementById('modal-overlay').style.display = 'flex';
+            document.getElementById('modal-overlay').style.justifyContent = 'center';
+            document.getElementById('modal-overlay').style.alignItems = 'center';
+            
+            // Ocultar todos los cuerpos
+            document.querySelectorAll('.modal-body').forEach(el => el.style.display = 'none');
+            // Mostrar el seleccionado
+            document.getElementById(id).style.display = 'block';
+        }
+    </script>
 </body>
 </html>
