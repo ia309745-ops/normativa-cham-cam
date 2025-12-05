@@ -190,34 +190,33 @@ function updateInfoPanel(props, bounds) {
     document.getElementById('info-default').style.display = 'none';
     document.getElementById('info-panel').style.display = 'block';
     
+    // 1. Datos Básicos
     var codOriginal = props['Uso/suelo'];
-    // Buscar clave en matriz (usando split por si acaso viene compleja, pero priorizando la exacta)
-    var claveMatriz = codOriginal;
-    // Si no existe exacta, intentar normalizar o buscar raíz
-    if (!MATRIZ_COMPATIBILIDAD[claveMatriz]) {
-        if (MATRIZ_COMPATIBILIDAD[normalizarCodigo(claveMatriz)]) {
-            claveMatriz = normalizarCodigo(claveMatriz);
-        } else if (MATRIZ_COMPATIBILIDAD[claveMatriz.split('/')[0]]) {
-            claveMatriz = claveMatriz.split('/')[0];
-        }
-    }
-
+    var claveMatriz = codOriginal.split('/')[0]; 
+    if (!MATRIZ_COMPATIBILIDAD[claveMatriz]) claveMatriz = codOriginal;
+    
     var nombreUso = getNombreUso(codOriginal);
+    
     document.getElementById('dash-titulo').innerText = nombreUso;
     document.getElementById('dash-uso-suelo').innerText = codOriginal;
     
     var area = parseFloat(props['Área Ha']);
     document.getElementById('dash-area-ha').innerText = isNaN(area) ? '0' : area.toFixed(4);
     
+    // 2. Generar Contenido Dinámico
     var containerBtn = document.querySelector('.action-buttons-container');
+    
     if(bounds) {
         var center = bounds.getCenter();
         
-        // 1. Botones
+        // --- CORRECCIÓN DEL LINK DE GOOGLE MAPS ---
+        // Usamos el formato ?q=lat,lng que es el estándar actual
+        var gmapsLink = `https://www.google.com/maps?q=${center.lat},${center.lng}`;
+        
+        // A. Botones de Acción
         var htmlBotones = `
             <div class="btn-group-vertical">
-                <a href="http://googleusercontent.com/maps.google.com/maps?q=${center.lat},${center.lng}" 
-                   target="_blank" class="btn-action google">
+                <a href="${gmapsLink}" target="_blank" class="btn-action google">
                    <i class="fa-solid fa-map-location-dot"></i> Ver en Google Maps
                 </a>
                 <a href="https://portales.municipiocampeche.gob.mx/#/portal" 
@@ -227,14 +226,13 @@ function updateInfoPanel(props, bounds) {
             </div>
         `;
         
-        // 2. Compatibilidad Completa
-        var datos = MATRIZ_COMPATIBILIDAD[claveMatriz];
-        var htmlCompat = "";
+        // B. Sección de Compatibilidad
+        var datosCompatibilidad = MATRIZ_COMPATIBILIDAD[claveMatriz];
+        var htmlCompatibilidad = "";
 
-        if (datos) {
+        if (datosCompatibilidad) {
             const crearLista = (items, icono, clase) => {
                 if (!items || items.length === 0) return "";
-                // Convertir array a lista HTML
                 return `
                     <div class="compat-section">
                         <h5 class="${clase}"><i class="${icono}"></i> ${clase.toUpperCase()}</h5>
@@ -243,28 +241,28 @@ function updateInfoPanel(props, bounds) {
                 `;
             };
 
-            htmlCompat = `
+            htmlCompatibilidad = `
                 <div class="compatibilidad-container">
                     <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
                     <h4 style="color:#333; margin-bottom:10px; font-size:0.9rem;">Compatibilidad de Usos</h4>
-                    ${crearLista(datos.permitido, "fa-solid fa-check-circle", "permitido")}
-                    ${crearLista(datos.condicionado, "fa-solid fa-triangle-exclamation", "condicionado")}
-                    ${crearLista(datos.prohibido, "fa-solid fa-ban", "prohibido")}
+                    ${crearLista(datosCompatibilidad.permitido, "fa-solid fa-check", "permitido")}
+                    ${crearLista(datosCompatibilidad.condicionado, "fa-solid fa-triangle-exclamation", "condicionado")}
+                    ${crearLista(datosCompatibilidad.prohibido, "fa-solid fa-ban", "prohibido")}
                 </div>
             `;
         } else {
-            htmlCompat = `<div class="compatibilidad-container"><hr><p style="color:#999; font-style:italic; font-size:0.8rem;">Sin información de compatibilidad específica para: ${claveMatriz}</p></div>`;
+            htmlCompatibilidad = `<div class="compatibilidad-container"><hr><p style="color:#999; font-style:italic; font-size:0.8rem;">Sin información de compatibilidad específica para esta zona.</p></div>`;
         }
 
-        // 3. Aviso Legal Completo
+        // C. Aviso Legal
         var htmlAviso = `
-            <div style="margin-top: 20px; padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px; font-size: 0.75rem; color: #856404; text-align: justify;">
+            <div style="margin-top: 20px; padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px; font-size: 0.75rem; color: #856404;">
                 <i class="fa-solid fa-circle-info"></i>
-                <strong>Aviso Legal:</strong> La información contenida en este visor es de carácter indicativo y tiene como propósito facilitar la consulta de la Zonificación Secundaria. Para cualquier trámite oficial, validación normativa, alineamiento o número oficial, es indispensable consultar directamente a la Dirección de Desarrollo Urbano del H. Ayuntamiento de Champotón. Este visor no sustituye los documentos oficiales impresos y sellados por la autoridad competente.
+                <strong>Nota Legal:</strong> La información mostrada es de carácter indicativo. Para trámites oficiales y validación normativa, consulte directamente a la <b>Dirección de Desarrollo Urbano</b>.
             </div>
         `;
 
-        containerBtn.innerHTML = htmlBotones + htmlCompat + htmlAviso;
+        containerBtn.innerHTML = htmlBotones + htmlCompatibilidad + htmlAviso;
     }
 }
 
