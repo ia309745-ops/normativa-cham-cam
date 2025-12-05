@@ -1,6 +1,5 @@
-// --- 1. CONFIGURACIÓN ---
+// --- 1. CONFIGURACIÓN DE ZONIFICACIÓN ---
 const ZONIFICACION = {
-    // Nota: He eliminado "EA" de aquí para que no salga en el menú de filtros
     "AV":          { color: '#166e19', nombre: "Área Verde" },
     "CS":          { color: '#ca3a6a', nombre: "Comercio y Servicio" },
     "CUC":         { color: '#d63c0d', nombre: "Corredor Urbano" },
@@ -11,80 +10,76 @@ const ZONIFICACION = {
     "I":           { color: '#881e9b', nombre: "Industrial" },
     "Urbanizabl":  { color: '#CFD8DC', nombre: "Urbanizable" },
     "VS":          { color: '#ffc061', nombre: "Vivienda Social" },
+    "EA":          { color: '#037e71', nombre: "Espacio Abierto" },
     "DEFAULT":     { color: '#9E9E9E', nombre: "Sin Definir" }
 };
 
-// --- MATRIZ DE COMPATIBILIDAD (Datos procesados de tu Excel) ---
+// --- 2. MATRIZ DE COMPATIBILIDAD (Datos Completos del Excel) ---
 const MATRIZ_COMPATIBILIDAD = {
-    "H2": {
-        "permitido": ["Vivienda Unifamiliar (1 viv/lote)", "Vivienda Bifamiliar (2 viv/lote)", "Comercio Vecinal", "Servicios Básicos", "Áreas Verdes y Parques"],
-        "condicionado": ["Vivienda Plurifamiliar (3+ viv/lote)", "Comercio Barrial", "Escuelas (Básica)", "Consultorios Médicos"],
-        "prohibido": ["Comercio Distrital/Central", "Servicios Especializados", "Talleres y Reparaciones", "Industria (Cualquier tipo)", "Hospitales", "Centros de Espectáculos", "Gasolineras"]
+    "Centro His": {
+        "permitido": ["Bienes de consumo, alimentos y bebidas, servicios personales, profesionales y financieros", "Plazas comerciales menores a 1000m²", "Clubes sociales y salones para banquetes", "Salones de baile y centros nocturnos", "Hoteles (<25 hab)", "Hoteles (>25 hab)", "Casas de huéspedes y plataformas", "Asistencia Social", "Vivienda Unifamiliar", "Vivienda Plurifamiliar", "Consultorios y unidades de primer contacto", "Centros de salud y clínicas", "Hospitales generales y especialidades", "Jardín de niños y guarderías", "Educación elemental y básica", "Centros de capacitación", "Centros culturales", "Galerías de arte", "Auditorios", "Cines y teatros", "Museos", "Bibliotecas", "Módulos de seguridad", "Estaciones de policía", "Orfanatos y asilos", "Parques y jardines", "Plazas y explanadas", "Mercados públicos", "Oficinas de gobierno", "Inmuebles de justicia"],
+        "condicionado": [],
+        "prohibido": ["Plazas comerciales >1,000 m²", "Supermercados", "Tiendas departamentales", "Centrales de abasto", "Gasolineras", "Depósitos de gas/combustibles", "Renta/Venta de maquinaria pesada", "Oficinas >500m²", "Estacionamientos públicos", "Moteles", "Industria (Cualquier tipo)", "Talleres grandes", "Bodegas industriales", "Terminales de carga", "Encierros de vehículos", "Rastros"]
     },
-    "H4": {
-        "permitido": ["Vivienda Unifamiliar", "Vivienda Bifamiliar", "Vivienda Plurifamiliar (Media densidad)", "Comercio Vecinal", "Comercio Barrial", "Servicios Básicos", "Escuelas (Básica)"],
-        "condicionado": ["Comercio Distrital", "Oficinas Pequeñas", "Talleres Artesanales (Bajo Impacto)", "Iglesias/Templos"],
-        "prohibido": ["Industria", "Bodegas Grandes", "Centros Nocturnos", "Gasolineras", "Hospitales Regionales"]
+    "HM/4/20": {
+        "permitido": ["Bienes de consumo y servicios básicos", "Plazas comerciales <1000m²", "Supermercados <1,000 m²", "Casas de huéspedes", "Asistencia Social", "Administración pública", "Vivienda Unifamiliar", "Vivienda Plurifamiliar", "Industria y manufactura hasta 500m²", "Consultorios médicos", "Clínicas y maternidades", "Hospitales de urgencias", "Jardín de niños", "Escuelas primarias", "Centros de capacitación", "Escuelas secundarias", "Preparatorias y vocacionales", "Universidades e investigación", "Centros culturales", "Galerías", "Auditorios", "Cines", "Museos", "Bibliotecas", "Bomberos", "Seguridad pública", "Templos y capillas", "Cementerios", "Parques y jardines", "Plazas", "Instalaciones deportivas", "Mercados públicos"],
+        "condicionado": ["Talleres mecánicos", "Centros de espectáculos masivos"],
+        "prohibido": ["Plazas comerciales >1,000 m²", "Supermercados >1,000 m²", "Tiendas departamentales", "Centrales de abasto", "Gasolineras", "Depósitos de combustible", "Clubes sociales y fiestas", "Centros nocturnos", "Maquinaria pesada", "Oficinas >500m²", "Estacionamientos públicos", "Hoteles", "Moteles", "Industria pesquera", "Industria mediana y pesada (>500m²)", "Residuos peligrosos", "Terminales de carga", "Rastros", "Instalaciones militares", "Extracción de materia prima"]
     },
-    "HM": { // Aplica para HM/4/20 y similares
-        "permitido": ["Vivienda (Todo tipo)", "Comercio Vecinal", "Comercio Barrial", "Comercio Distrital", "Oficinas y Servicios Profesionales", "Hoteles y Moteles", "Escuelas (Todos los niveles)", "Hospitales y Clínicas"],
-        "condicionado": ["Talleres Mecánicos", "Centros de Espectáculos", "Gasolineras", "Bodegas de Distribución"],
-        "prohibido": ["Industria Mediana/Pesada", "Rellenos Sanitarios", "Usos de Alto Riesgo"]
+    "CS": {
+        "permitido": ["Comercios y Servicios generales", "Plazas comerciales (Todas)", "Supermercados (Todos)", "Tiendas departamentales", "Mayoreo y abarrotes", "Centrales de abasto", "Gasolineras", "Clubes sociales", "Centros nocturnos", "Venta de maquinaria", "Oficinas en general", "Estacionamientos públicos", "Hoteles (Todos)", "Moteles", "Casas de huéspedes", "Asistencia Social", "Administración pública", "Industria ligera (<500m²)", "Industria pesquera (<500m²)", "Salud (Todos los niveles)", "Educación (Todos los niveles)", "Cultura y recreación (Todo tipo)", "Seguridad pública", "Templos", "Cementerios", "Parques y Plazas", "Deportes", "Mercados", "Terminales de transporte", "Telecomunicaciones"],
+        "condicionado": [],
+        "prohibido": ["Depósitos de gas/combustibles", "Vivienda Unifamiliar", "Vivienda Plurifamiliar", "Industria pesquera >500m²", "Industria mediana y pesada (>500m²)", "Residuos peligrosos", "Industria eléctrica fósil", "Fundición y metalurgia", "Rastros", "Rellenos sanitarios", "Generación de energía", "Instalaciones militares", "Minería"]
     },
-    "CUC": { // Corredor Urbano
-        "permitido": ["Comercio (Todo tipo)", "Servicios Especializados", "Oficinas Corporativas", "Hoteles", "Centros Comerciales", "Equipamiento Regional", "Vivienda Vertical (Alta densidad)"],
-        "condicionado": ["Gasolineras", "Talleres de Servicio", "Industria Ligera (No contaminante)"],
-        "prohibido": ["Industria Pesada", "Vivienda Unifamiliar Aislada", "Granjas/Agropecuario"]
+    "VS": {
+        "permitido": ["Vivienda Plurifamiliar", "Consultorios de primer contacto", "Jardín de niños y guarderías", "Centros de rehabilitación", "Parques y jardines vecinales", "Plazas", "Canchas deportivas", "Infraestructura de agua potable"],
+        "condicionado": [],
+        "prohibido": ["Comercio y servicios generales", "Plazas comerciales", "Supermercados", "Tiendas departamentales", "Mayoreo", "Gasolineras", "Centros nocturnos", "Oficinas", "Hoteles y Moteles", "Asistencia social", "Administración pública", "Vivienda Unifamiliar", "Industria (Cualquier tipo)", "Hospitales y clínicas", "Escuelas (Primaria en adelante)", "Cultura y recreación", "Seguridad pública", "Templos", "Cementerios", "Terminales de transporte", "Mercados", "Rastros", "Infraestructura mayor"]
     },
-    "CUCO": { // Corredor Costero
-        "permitido": ["Hoteles y Resorts", "Restaurantes y Bares Turísticos", "Comercio Turístico", "Clubes de Playa", "Vivienda Vacacional/Turística", "Marinas y Muelles"],
-        "condicionado": ["Vivienda Permanente", "Comercio General"],
-        "prohibido": ["Industria", "Talleres", "Bodegas", "Usos que obstruyan vista al mar"]
+    "CUC": {
+        "permitido": ["Comercio y servicios generales", "Plazas comerciales", "Supermercados", "Tiendas departamentales", "Mayoreo", "Centrales de abasto", "Gasolineras", "Clubes sociales", "Centros nocturnos", "Venta de maquinaria", "Oficinas", "Estacionamientos", "Hoteles", "Moteles", "Vivienda Plurifamiliar (Vertical)", "Industria ligera (<1000m²)", "Salud (Todos)", "Educación (Todos)", "Cultura (Todos)", "Seguridad", "Templos", "Deportes", "Terminales de transporte", "Mercados"],
+        "condicionado": ["Industria pesquera (>500m²)"],
+        "prohibido": ["Vivienda Unifamiliar", "Depósitos de combustible", "Industria Pesada (>1000m²)", "Residuos peligrosos", "Industria metalúrgica", "Rastros", "Rellenos sanitarios", "Minería"]
     },
-    "I": { // Industria
-        "permitido": ["Industria Ligera", "Industria Mediana", "Bodegas y Almacenes", "Parques Industriales", "Talleres Mayores", "Logística y Transporte"],
-        "condicionado": ["Industria Pesada (Sujeto a MIA)", "Comercio de Insumos Industriales", "Oficinas Administrativas de la Industria"],
-        "prohibido": ["Vivienda", "Escuelas", "Hospitales", "Hoteles", "Comercio Turístico"]
+    "CUCO": {
+        "permitido": ["Bienes de consumo básico", "Plazas comerciales", "Supermercados", "Clubes sociales", "Centros nocturnos", "Oficinas", "Estacionamientos", "Hoteles (Todos)", "Moteles", "Casas de huéspedes", "Asistencia Social", "Administración pública", "Vivienda Plurifamiliar", "Industria ligera (<500m²)", "Salud (Todos)", "Educación (Todos)", "Cultura (Todos)", "Seguridad", "Templos", "Parques y Plazas", "Deportes", "Mercados"],
+        "condicionado": ["Industria pesquera (>500m²)"],
+        "prohibido": ["Vivienda Unifamiliar", "Gasolineras", "Depósitos de combustible", "Maquinaria pesada", "Industria mediana y pesada", "Residuos", "Terminales de carga", "Rastros", "Infraestructura pesada"]
     },
-    "E": { // Equipamiento
-        "permitido": ["Edificios Públicos", "Escuelas y Universidades", "Hospitales", "Centros Culturales/Deportivos", "Terminales de Transporte", "Mercados Públicos"],
-        "condicionado": ["Comercio de Apoyo (Cafeterías, Librerías)", "Vivienda para Conserjes/Vigilancia"],
-        "prohibido": ["Industria", "Bares y Cantinas", "Vivienda General"]
+    "I": {
+        "permitido": ["Comercio mayorista", "Gasolineras", "Depósitos de combustible/químicos", "Venta de maquinaria", "Oficinas", "Estacionamientos", "Industria manufacturera (Todas las escalas)", "Industria pesquera", "Depósitos de residuos", "Industria eléctrica/fósil", "Metalurgia", "Materiales de demolición", "Seguridad pública", "Terminales de carga", "Talleres de transporte", "Rastros", "Plantas de tratamiento y energía"],
+        "condicionado": ["Comercios y servicios básicos (para empleados)"],
+        "prohibido": ["Vivienda (Cualquier tipo)", "Plazas comerciales", "Supermercados", "Clubes sociales", "Hoteles", "Escuelas (Básica/Media)", "Hospitales", "Cultura y recreación", "Deportes", "Cementerios", "Áreas naturales protegidas"]
     },
-    "AV": { // Áreas Verdes / Espacios Abiertos
-        "permitido": ["Parques y Jardines", "Plazas Cívicas", "Instalaciones Deportivas al Aire Libre", "Conservación Ecológica", "Viveros"],
-        "condicionado": ["Kioscos y Pequeño Comercio (Bebidas/Alimentos)", "Baños Públicos", "Instalaciones Temporales (Ferias)"],
-        "prohibido": ["Vivienda", "Industria", "Comercio Establecido Grande", "Cualquier edificación permanente invasiva"]
+    "E": {
+        "permitido": ["Asistencia Social", "Administración pública", "Consultorios", "Clínicas", "Hospitales", "Educación (Todos los niveles)", "Centros de investigación", "Centros culturales", "Auditorios", "Museos", "Bibliotecas", "Seguridad pública", "Bomberos", "Parques", "Deportes", "Mercados", "Terminales de transporte", "Cementerios"],
+        "condicionado": ["Comercio básico de apoyo"],
+        "prohibido": ["Vivienda", "Industria", "Comercio gran escala", "Gasolineras", "Centros nocturnos", "Hoteles", "Rastros", "Basureros"]
+    },
+    "AV": {
+        "permitido": ["Parques y jardines", "Plazas y explanadas", "Jardines botánicos", "Canchas deportivas al aire libre", "Áreas de preservación ambiental", "Viveros"],
+        "condicionado": ["Kioscos", "Baños públicos", "Comercio temporal (ferias)"],
+        "prohibido": ["Vivienda (Cualquier tipo)", "Industria", "Comercio establecido", "Oficinas", "Hoteles", "Escuelas", "Hospitales", "Gasolineras", "Cualquier edificación permanente invasiva"]
+    },
+     "EA": { // Igual que AV
+        "permitido": ["Parques y jardines", "Plazas y explanadas", "Jardines botánicos", "Canchas deportivas al aire libre", "Áreas de preservación ambiental", "Viveros"],
+        "condicionado": ["Kioscos", "Baños públicos", "Comercio temporal (ferias)"],
+        "prohibido": ["Vivienda (Cualquier tipo)", "Industria", "Comercio establecido", "Oficinas", "Hoteles", "Escuelas", "Hospitales", "Gasolineras", "Cualquier edificación permanente invasiva"]
     }
-    // Nota: Si un código no está aquí, el sistema asumirá prohibición general.
 };
 
-// --- 2. MAPA Y CONTROLES ---
-// Inicializamos el mapa con ZOOM 16 (Más cerca, como pediste)
-var map = L.map('map', { zoomControl: false }).setView([19.34, -90.71], 14);
+// --- 3. MAPA Y CONTROLES (ORDEN CORREGIDO: CAPAS -> GPS -> ZOOM) ---
+// Inicializamos el mapa sin controles por defecto
+var map = L.map('map', { zoomControl: false }).setView([19.3510, -90.7226], 14);
 
-// 2º Definimos los Mapas Base
-var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18,
-    attribution: '&copy; OpenStreetMap contributors'
-}).addTo(map); // .addTo(map) hace que este sea el predeterminado
+// 1. CAPAS (TopRight - Primero en la pila)
+var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(map);
+var sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles © Esri' });
+var dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '© CARTO' });
 
-var sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Tiles &copy; Esri'
-});
+L.control.layers({ "Callejero": osm, "Satélite": sat, "Oscuro": dark }, null, { position: 'topright' }).addTo(map);
 
-var dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; CARTO'
-});
-
-// 3º Control de Capas (Arriba a la derecha)
-L.control.layers({ 
-    "Callejero (OSM)": osm, 
-    "Satélite": sat,
-    "Modo Oscuro": dark 
-}, null, { position: 'topright' }).addTo(map);
-
-// 2º AGREGAMOS BOTÓN GPS (Para que quede EN MEDIO)
+// 2. BOTÓN GPS (TopRight - Segundo en la pila)
 var GpsControl = L.Control.extend({
     options: { position: 'topright' },
     onAdd: function(map) {
@@ -93,11 +88,12 @@ var GpsControl = L.Control.extend({
         btn.href = "#";
         btn.title = "Mi Ubicación";
         btn.innerHTML = '<i class="fa-solid fa-location-crosshairs" style="font-size:1.2em; line-height:30px;"></i>';
-        btn.style.backgroundColor = "white";
-        btn.style.width = "30px";
-        btn.style.height = "30px";
-        btn.style.display = "block";
+        btn.style.backgroundColor = "white"; 
+        btn.style.width = "30px"; 
+        btn.style.height = "30px"; 
+        btn.style.display = "block"; 
         btn.style.textAlign = "center";
+        
         btn.onclick = function(e) {
             e.preventDefault();
             if(!navigator.geolocation) { alert("GPS no soportado"); return; }
@@ -105,11 +101,11 @@ var GpsControl = L.Control.extend({
             navigator.geolocation.getCurrentPosition(pos => {
                 var lat = pos.coords.latitude;
                 var lng = pos.coords.longitude;
-                map.setView([lat, lng], 16);
+                map.setView([lat, lng], 18);
                 L.marker([lat, lng]).addTo(map).bindPopup("Estás aquí").openPopup();
                 btn.innerHTML = '<i class="fa-solid fa-location-dot" style="color:#106b3d;"></i>';
             }, () => {
-                alert("No se pudo obtener ubicación");
+                alert("No se pudo obtener ubicación. Revisa los permisos.");
                 btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i>';
             });
         };
@@ -118,24 +114,19 @@ var GpsControl = L.Control.extend({
 });
 map.addControl(new GpsControl());
 
-// 3º AGREGAMOS ZOOM (Para que quede ABAJO)
+// 3. ZOOM (TopRight - Tercero en la pila)
 L.control.zoom({ position: 'topright' }).addTo(map);
 
-
-// --- 3. VARIABLES GLOBALES ---
+// --- 4. VARIABLES Y LÓGICA ---
 var usoData = null;
 var geojsonLayer;
 var estadoFiltros = {};
-var currentOpacity = 0.9;
+var currentOpacity = 1;
 var selectedLayer = null;
 
-// --- 4. LÓGICA DE DATOS ("TRUCO" DE FUSIÓN EA -> AV) ---
-
-// Función auxiliar para normalizar el código (Aquí ocurre la magia de la fusión)
 function normalizarCodigo(codigoOriginal) {
     var cod = codigoOriginal ? codigoOriginal.trim() : "DEFAULT";
-    // Si es "EA" (Espacio Abierto), lo transformamos en "AV" (Área Verde)
-    if (cod === "EA") return "AV";
+    if (cod === "EA") return "AV"; // Truco: EA se visualiza como AV
     return cod;
 }
 
@@ -152,8 +143,8 @@ function getNombreUso(codigo) {
 function style(feature) {
     return {
         fillColor: getColor(feature.properties['Uso/suelo']),
-        weight: 0.2, 
-        opacity: 0.4, 
+        weight: 0.1,      // Borde fino
+        opacity: 0.8,     // Borde sutil
         color: 'white',
         fillOpacity: currentOpacity
     };
@@ -161,72 +152,68 @@ function style(feature) {
 
 var highlightStyle = { weight: 3, color: '#00FFFF', fillOpacity: 0.8 };
 
-// --- 5. RENDERIZADO DEL MAPA ---
+// --- 5. RENDERIZADO ---
 function renderMap() {
     if(geojsonLayer) map.removeLayer(geojsonLayer);
     if (!usoData) return;
 
     geojsonLayer = L.geoJSON(usoData, {
-        renderer: L.canvas(), 
+        renderer: L.canvas(), // Optimización
         style: style,
         
         filter: function(feature) {
-            // Usamos el código normalizado para filtrar
-            // Así, si desactiva "Área Verde", también se ocultan los "Espacio Abierto"
             var cod = normalizarCodigo(feature.properties['Uso/suelo']);
             return estadoFiltros[cod] !== false;
         },
         
         onEachFeature: function(feature, layer) {
             var cod = feature.properties['Uso/suelo'];
-            // Tooltip muestra el nombre "Área Verde" incluso si es "EA" en los datos originales
             layer.bindTooltip(getNombreUso(cod), { sticky: true, direction: 'top' });
             
             layer.on('click', function(e) {
                 L.DomEvent.stopPropagation(e);
-                if (selectedLayer) geojsonLayer.resetStyle(selectedLayer);
-                
+                if(selectedLayer) geojsonLayer.resetStyle(selectedLayer);
                 selectedLayer = e.target;
                 selectedLayer.setStyle(highlightStyle);
                 selectedLayer.bringToFront();
                 
                 updateInfoPanel(feature.properties, layer.getBounds());
                 
-                var btnDetalle = document.querySelector('.nav-btn[data-target="panel-detalle"]');
-                if(btnDetalle) btnDetalle.click();
-                map.fitBounds(layer.getBounds(), {padding:[50,50], maxZoom: 17});
+                document.querySelector('.nav-btn[data-target="panel-detalle"]').click();
+                map.fitBounds(layer.getBounds(), {padding:[50,50], maxZoom:19});
             });
         }
     }).addTo(map);
 }
 
-// --- 6. ACTUALIZACIÓN DE PANELES ---
 function updateInfoPanel(props, bounds) {
     document.getElementById('info-default').style.display = 'none';
     document.getElementById('info-panel').style.display = 'block';
     
-    // 1. Datos Básicos
     var codOriginal = props['Uso/suelo'];
-    
-    // Lógica para buscar en la matriz (usando la raíz del código si es necesario)
-    var claveMatriz = codOriginal.split('/')[0]; 
-    if (!MATRIZ_COMPATIBILIDAD[claveMatriz]) claveMatriz = codOriginal;
-    
+    // Buscar clave en matriz (usando split por si acaso viene compleja, pero priorizando la exacta)
+    var claveMatriz = codOriginal;
+    // Si no existe exacta, intentar normalizar o buscar raíz
+    if (!MATRIZ_COMPATIBILIDAD[claveMatriz]) {
+        if (MATRIZ_COMPATIBILIDAD[normalizarCodigo(claveMatriz)]) {
+            claveMatriz = normalizarCodigo(claveMatriz);
+        } else if (MATRIZ_COMPATIBILIDAD[claveMatriz.split('/')[0]]) {
+            claveMatriz = claveMatriz.split('/')[0];
+        }
+    }
+
     var nombreUso = getNombreUso(codOriginal);
-    
     document.getElementById('dash-titulo').innerText = nombreUso;
     document.getElementById('dash-uso-suelo').innerText = codOriginal;
     
     var area = parseFloat(props['Área Ha']);
     document.getElementById('dash-area-ha').innerText = isNaN(area) ? '0' : area.toFixed(4);
     
-    // 2. Generar Contenido Dinámico (Botones + Compatibilidad + Aviso)
     var containerBtn = document.querySelector('.action-buttons-container');
-    
     if(bounds) {
         var center = bounds.getCenter();
         
-        // A. Botones de Acción
+        // 1. Botones
         var htmlBotones = `
             <div class="btn-group-vertical">
                 <a href="http://googleusercontent.com/maps.google.com/maps?q=${center.lat},${center.lng}" 
@@ -240,13 +227,14 @@ function updateInfoPanel(props, bounds) {
             </div>
         `;
         
-        // B. Sección de Compatibilidad
-        var datosCompatibilidad = MATRIZ_COMPATIBILIDAD[claveMatriz];
-        var htmlCompatibilidad = "";
+        // 2. Compatibilidad Completa
+        var datos = MATRIZ_COMPATIBILIDAD[claveMatriz];
+        var htmlCompat = "";
 
-        if (datosCompatibilidad) {
+        if (datos) {
             const crearLista = (items, icono, clase) => {
                 if (!items || items.length === 0) return "";
+                // Convertir array a lista HTML
                 return `
                     <div class="compat-section">
                         <h5 class="${clase}"><i class="${icono}"></i> ${clase.toUpperCase()}</h5>
@@ -255,98 +243,154 @@ function updateInfoPanel(props, bounds) {
                 `;
             };
 
-            htmlCompatibilidad = `
+            htmlCompat = `
                 <div class="compatibilidad-container">
                     <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
                     <h4 style="color:#333; margin-bottom:10px; font-size:0.9rem;">Compatibilidad de Usos</h4>
-                    ${crearLista(datosCompatibilidad.permitido, "fa-solid fa-check", "permitido")}
-                    ${crearLista(datosCompatibilidad.condicionado, "fa-solid fa-triangle-exclamation", "condicionado")}
-                    ${crearLista(datosCompatibilidad.prohibido, "fa-solid fa-ban", "prohibido")}
+                    ${crearLista(datos.permitido, "fa-solid fa-check-circle", "permitido")}
+                    ${crearLista(datos.condicionado, "fa-solid fa-triangle-exclamation", "condicionado")}
+                    ${crearLista(datos.prohibido, "fa-solid fa-ban", "prohibido")}
                 </div>
             `;
         } else {
-            htmlCompatibilidad = `<div class="compatibilidad-container"><hr><p style="color:#999; font-style:italic; font-size:0.8rem;">Sin información de compatibilidad específica para esta zona.</p></div>`;
+            htmlCompat = `<div class="compatibilidad-container"><hr><p style="color:#999; font-style:italic; font-size:0.8rem;">Sin información de compatibilidad específica para: ${claveMatriz}</p></div>`;
         }
 
-        // C. Aviso Legal
+        // 3. Aviso Legal Completo
         var htmlAviso = `
-            <div style="margin-top: 20px; padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px; font-size: 0.75rem; color: #856404;">
+            <div style="margin-top: 20px; padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px; font-size: 0.75rem; color: #856404; text-align: justify;">
                 <i class="fa-solid fa-circle-info"></i>
-                <strong>Nota Legal:</strong> La información mostrada es de carácter indicativo. Para trámites oficiales y validación normativa, consulte directamente a la <b>Dirección de Desarrollo Urbano</b>.
+                <strong>Aviso Legal:</strong> La información contenida en este visor es de carácter indicativo y tiene como propósito facilitar la consulta de la Zonificación Secundaria. Para cualquier trámite oficial, validación normativa, alineamiento o número oficial, es indispensable consultar directamente a la Dirección de Desarrollo Urbano del H. Ayuntamiento de Champotón. Este visor no sustituye los documentos oficiales impresos y sellados por la autoridad competente.
             </div>
         `;
 
-        // D. Inserción Final (Unimos las 3 partes)
-        containerBtn.innerHTML = htmlBotones + htmlCompatibilidad + htmlAviso;
+        containerBtn.innerHTML = htmlBotones + htmlCompat + htmlAviso;
     }
 }
 
-// --- 7. CARGA Y ESTADÍSTICAS ---
+// --- 7. CARGA DE DATOS Y ESTADÍSTICAS ---
 async function cargarDatos() {
     const statusEl = document.getElementById('stats-container');
     statusEl.innerHTML = '<p style="padding:10px;"><i class="fa-solid fa-spinner fa-spin"></i> Cargando mapa...</p>';
 
     try {
-        const response = await fetch('uso.geojson');
-        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-        usoData = await response.json();
+        const res = await fetch('uso.geojson');
+        if(!res.ok) throw new Error("Error al cargar uso.geojson");
+        usoData = await res.json();
         
-        statusEl.innerHTML = ''; 
         generarControles();
         renderMap();
         calcularEstadisticas();
         
-        if (geojsonLayer) {
-            map.fitBounds(geojsonLayer.getBounds());
-        }
+        if(geojsonLayer) map.fitBounds(geojsonLayer.getBounds());
 
-    } catch (error) {
-        console.error(error);
-        statusEl.innerHTML = '<div style="padding:15px; color:red;">Error cargando datos.</div>';
+    } catch (e) {
+        document.getElementById('stats-container').innerHTML = `<p style="color:red; padding:10px">Error: ${e.message}. Asegúrate de que uso.geojson está en la carpeta.</p>`;
     }
 }
 
 function generarControles() {
-    var container = document.getElementById('capas-container');
-    container.innerHTML = '';
-    Object.keys(ZONIFICACION).forEach(key => {
-        if(key === 'DEFAULT') return;
-        
-        estadoFiltros[key] = true;
-        var div = document.createElement('div');
-        div.className = 'layer-control-row';
-        div.innerHTML = `
-            <input type="checkbox" checked id="chk-${key}" style="margin-right:8px; cursor:pointer;">
-            <span style="width:12px;height:12px;background:${ZONIFICACION[key].color};margin-right:8px;display:inline-block;border-radius:50%"></span>
-            <label for="chk-${key}" style="cursor:pointer;font-size:0.9em;user-select:none;">${ZONIFICACION[key].nombre}</label>
+    var div = document.getElementById('capas-container');
+    div.innerHTML = '';
+    Object.keys(ZONIFICACION).forEach(k => {
+        if(k === 'DEFAULT') return;
+        estadoFiltros[k] = true;
+        div.innerHTML += `
+            <div class="layer-control-row">
+                <input type="checkbox" checked id="chk-${k}" onchange="toggleFiltro('${k}', this.checked)">
+                <span style="width:12px;height:12px;background:${ZONIFICACION[k].color};margin:0 8px;border-radius:50%"></span>
+                <label for="chk-${k}">${ZONIFICACION[k].nombre}</label>
+            </div>
         `;
-        div.querySelector('input').addEventListener('change', (e) => {
-            estadoFiltros[key] = e.target.checked;
-            renderMap();
-        });
-        container.appendChild(div);
     });
+}
+
+function toggleFiltro(key, checked) {
+    estadoFiltros[key] = checked;
+    renderMap();
+}
+
+function toggleTodosFiltros(val) {
+    Object.keys(estadoFiltros).forEach(k => estadoFiltros[k] = val);
+    document.querySelectorAll('#capas-container input').forEach(c => c.checked = val);
+    renderMap();
 }
 
 function calcularEstadisticas() {
     var counts = {};
-    var total = 0;
+    var areas = {};
+    var totalPredios = 0;
+    var totalHa = 0;
+
+    if (!usoData) return;
+
+    // 1. Contar y sumar áreas
     usoData.features.forEach(f => {
-        // Usamos normalizarCodigo aquí también para sumar "EA" dentro de "AV"
         var c = normalizarCodigo(f.properties['Uso/suelo']);
-        counts[c] = (counts[c] || 0) + 1;
-        total++;
+        var a = parseFloat(f.properties['Área Ha']) || 0;
+
+        if (!counts[c]) { counts[c] = 0; areas[c] = 0; }
+        counts[c]++;
+        areas[c] += a;
+
+        totalPredios++;
+        totalHa += a;
     });
-    
-    var html = `<div style="padding:10px; background:#e3f2fd; margin-bottom:10px;"><b>Total Predios:</b> ${total.toLocaleString()}</div>`;
+
+    // 2. Convertir a lista para poder ORDENAR
+    var listaOrdenada = [];
     for (var key in counts) {
-        // Solo mostramos los que están en nuestra configuración ZONIFICACION
         if (ZONIFICACION[key]) {
-            var nombre = ZONIFICACION[key].nombre;
-            var color = ZONIFICACION[key].color;
-            html += `<div class="stat-row"><span style="border-left: 4px solid ${color}; padding-left:5px;">${nombre}</span><strong>${counts[key]}</strong></div>`;
+            listaOrdenada.push({
+                clave: key,
+                nombre: ZONIFICACION[key].nombre,
+                color: ZONIFICACION[key].color,
+                cantidad: counts[key],
+                area: areas[key]
+            });
         }
     }
+
+    // 3. Ordenar de Mayor a Menor Área (Descendente)
+    listaOrdenada.sort((a, b) => b.area - a.area);
+
+    // 4. Generar HTML (Tarjeta Azul + Lista)
+    var html = `
+        <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 5px solid #2196F3;">
+            <h4 style="margin:0 0 10px 0; color:#1565C0; font-size:1rem;">Resumen de la Ciudad</h4>
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:0.9rem;">
+                <span style="color:#555;">Total Predios:</span> 
+                <strong style="font-size:1.1em;">${totalPredios.toLocaleString()}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:0.9rem;">
+                <span style="color:#555;">Superficie Total:</span> 
+                <strong style="font-size:1.1em;">${totalHa.toLocaleString(undefined, {maximumFractionDigits: 2})} Ha</strong>
+            </div>
+        </div>
+        <div class="stats-list" style="display:flex; flex-direction:column; gap:5px;">
+    `;
+
+    // 5. Generar filas alineadas
+    listaOrdenada.forEach(item => {
+        html += `
+            <div class="stat-row" style="
+                display: grid; 
+                grid-template-columns: 4px 1fr auto auto; 
+                gap: 10px; 
+                align-items: center;
+                padding: 8px 5px; 
+                border-bottom: 1px solid #eee;
+                font-size: 0.85rem;">
+                
+                <div style="background:${item.color}; height:100%; border-radius:2px;"></div>
+                <div style="font-weight:600; color:#333;">${item.nombre}</div>
+                <div style="color:#666; text-align:right;">${item.cantidad.toLocaleString()} <span style="font-size:0.7em">lotes</span></div>
+                <div style="color:#333; font-weight:bold; text-align:right; min-width:60px;">${item.area.toLocaleString(undefined, {maximumFractionDigits: 1})} <span style="font-size:0.7em">Ha</span></div>
+            </div>
+        `;
+    });
+    html += "</div>";
+
     document.getElementById('stats-container').innerHTML = html;
 }
 
@@ -354,45 +398,46 @@ function calcularEstadisticas() {
 document.addEventListener('DOMContentLoaded', function() {
     cargarDatos();
 
-    const slider = document.getElementById('opacity-slider');
-    if(slider) {
-        slider.addEventListener('input', (e) => {
-            currentOpacity = e.target.value;
-            if(geojsonLayer) geojsonLayer.setStyle(style);
-        });
-    }
+    // Slider Opacidad
+    document.getElementById('opacity-slider').addEventListener('input', e => {
+        currentOpacity = e.target.value;
+        if(geojsonLayer) geojsonLayer.setStyle(style);
+    });
 
+    // Sidebar Toggle
     const sidebar = document.getElementById('sidebar-content');
+    const toggleBtn = document.getElementById('toggle-sidebar-btn');
+    const icon = toggleBtn.querySelector('i');
+
+    toggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+        if (sidebar.classList.contains('collapsed')) {
+            icon.classList.replace('fa-chevron-left', 'fa-chevron-right');
+        } else {
+            icon.classList.replace('fa-chevron-right', 'fa-chevron-left');
+        }
+        setTimeout(() => map.invalidateSize(), 300);
+    });
+
+    // Botones Sidebar
     document.querySelectorAll('.nav-btn[data-target]').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.sidebar-pane').forEach(p => p.classList.remove('active'));
+            
             btn.classList.add('active');
             document.getElementById(btn.dataset.target).classList.add('active');
-            if(sidebar.classList.contains('collapsed')) sidebar.classList.remove('collapsed');
+            
+            if(sidebar.classList.contains('collapsed')) {
+                toggleBtn.click(); 
+            }
         });
     });
-    
-    var toggleBtn = document.getElementById('toggle-sidebar-btn');
-    if(toggleBtn) {
-        toggleBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-        });
-    }
 
     // Modales
-    const overlay = document.getElementById('modal-overlay');
-    document.querySelectorAll('.tab-link').forEach(btn => {
-        btn.addEventListener('click', () => overlay.style.display = 'flex');
-    });
-    document.getElementById('modal-close-btn').addEventListener('click', () => overlay.style.display = 'none');
+    window.openModal = function(id) {
+        document.getElementById('modal-overlay').style.display = 'flex';
+        document.querySelectorAll('.modal-body').forEach(b => b.style.display = 'none');
+        document.getElementById(id).style.display = 'block';
+    };
 });
-
-function toggleTodosFiltros(activar) {
-    document.querySelectorAll('#capas-container input').forEach(chk => {
-        chk.checked = activar;
-        var key = chk.id.replace('chk-', '');
-        estadoFiltros[key] = activar;
-    });
-    renderMap();
-}

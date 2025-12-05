@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zonificación Secundaria de Champotón</title>
+    <title>Geovisualizador Urbano de Champotón</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -14,11 +14,15 @@
     <header id="main-header">
         <div class="header-logo">
             <i class="fa-solid fa-map-location-dot"></i>
-            <h1 id="header-title">Uso de suelo en Champotón</h1>
+            <h1 id="header-title">Zonificación secundaria de Champotón</h1>
         </div>
         <nav class="tabs">
-            <button class="tab-link" onclick="openModal('modal-info')">Información</button>
-            <button class="tab-link" onclick="openModal('modal-contacto')">Contacto</button> 
+            <button class="tab-link" onclick="openModal('modal-info')">
+                <i class="fa-solid fa-circle-info"></i> Info
+            </button>
+            <button class="tab-link" onclick="openModal('modal-contacto')">
+                <i class="fa-solid fa-envelope"></i> Contacto
+            </button> 
         </nav>
     </header>
 
@@ -51,7 +55,9 @@
                     <h3><i class="fa-solid fa-chart-pie"></i> Diagnóstico Global</h3>
                 </div>
                 <div id="stats-container" class="pane-body">
-                    <p style="color:#666; font-style:italic;">Cargando datos...</p>
+                    <p style="color:#666; font-style:italic; padding:20px; text-align:center;">
+                        <i class="fa-solid fa-spinner fa-spin"></i> Cargando estadísticas...
+                    </p>
                 </div>
             </div>
 
@@ -61,22 +67,22 @@
                 </div>
                 <div class="pane-body">
                     <div id="info-default">
-                        <div style="text-align:center; margin-top:50px; color:#999;">
-                            <i class="fa-solid fa-arrow-pointer" style="font-size:3rem; margin-bottom:10px;"></i>
-                            <p>Selecciona un predio en el mapa para ver su información.</p>
+                        <div style="text-align:center; margin-top:60px; color:#bbb;">
+                            <i class="fa-solid fa-arrow-pointer" style="font-size:3rem; margin-bottom:15px;"></i>
+                            <p>Selecciona un predio en el mapa<br>para ver su compatibilidad.</p>
                         </div>
                     </div>
                     
                     <div id="info-panel" style="display: none;"> 
-                         <h4 id="dash-titulo" class="ficha-title" style="color:#0c414e; border-bottom:2px solid #FDD835; padding-bottom:5px;">--</h4>
+                         <h4 id="dash-titulo" class="ficha-title" style="color:#0c414e; border-bottom:2px solid #FDD835; padding-bottom:5px; margin-top:0;">--</h4>
                          
                          <div class="ficha-grid">
                              <div class="ficha-item">
-                                 <label>Uso de Suelo</label>
+                                 <label>Clave Uso</label>
                                  <span id="dash-uso-suelo">--</span>
                              </div>
                              <div class="ficha-item">
-                                 <label>Área (Ha)</label>
+                                 <label>Superficie (Ha)</label>
                                  <span id="dash-area-ha">--</span>
                              </div>
                          </div>
@@ -92,9 +98,9 @@
                     <small onclick="toggleTodosFiltros(true)" style="cursor:pointer; color:#106b3d; font-weight:bold;">Ver todo</small>
                 </div>
                 <div class="pane-body">
-                    <div style="margin-bottom: 15px;">
-                        <label for="opacity-slider" style="display:block; margin-bottom:5px; font-size:0.9em;">Transparencia:</label>
-                        <input type="range" id="opacity-slider" min="0" max="1" step="0.1" value="0.6" style="width:100%">
+                    <div style="margin-bottom: 20px; background:#f9f9f9; padding:10px; border-radius:5px;">
+                        <label for="opacity-slider" style="display:block; margin-bottom:8px; font-size:0.85em; font-weight:600; color:#555;">Opacidad del Mapa:</label>
+                        <input type="range" id="opacity-slider" min="0" max="1" step="0.1" value="1" style="width:100%; cursor:pointer;">
                     </div>
                     <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
                     
@@ -106,25 +112,30 @@
 
         <main id="map-container">
             <div id="map"></div>
-            </main>
+        </main>
 
     </div> 
 
     <div id="modal-overlay" style="display:none;">
-        <div id="modal-content" style="background:white; padding:25px; border-radius:8px; max-width:500px; width:90%; position:relative; box-shadow:0 5px 15px rgba(0,0,0,0.3);">
-            <button onclick="document.getElementById('modal-overlay').style.display='none'" style="position:absolute; top:10px; right:15px; border:none; background:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+        <div id="modal-content" style="background:white; padding:30px; border-radius:8px; max-width:500px; width:90%; position:relative; box-shadow:0 10px 30px rgba(0,0,0,0.3);">
+            <button onclick="document.getElementById('modal-overlay').style.display='none'" style="position:absolute; top:15px; right:20px; border:none; background:none; font-size:2rem; cursor:pointer; color:#999;">&times;</button>
             
             <div id="modal-info" class="modal-body" style="display:none;">
-                <h2 style="margin-top:0; color:#106b3d;">Información del Visor</h2>
-                <p>Esta herramienta permite visualizar la <b>Zonificación Secundaria</b> de Champotón.</p>
-                <p>Los datos son oficiales y provienen de <b>Encaje Territorial & Urbano</b>.</p>
+                <h2 style="margin-top:0; color:#106b3d; border-bottom:2px solid #eee; padding-bottom:10px;">Información del Visor</h2>
+                <p>Esta herramienta digital permite consultar la <b>Zonificación Secundaria</b> oficial de Champotón, Campeche.</p>
+                <p><b>Fuente de datos:</b> Encaje Territorial & Urbano.</p>
+                <div style="background:#e8f5e9; padding:10px; border-radius:4px; margin-top:15px; font-size:0.9em; color:#2e7d32;">
+                    <i class="fa-solid fa-check-circle"></i> <b>Tip:</b> Da clic en cualquier predio para ver qué actividades están permitidas o prohibidas.
+                </div>
             </div>
 
             <div id="modal-contacto" class="modal-body" style="display:none;">
-                <h2 style="margin-top:0; color:#106b3d;">Contacto</h2>
+                <h2 style="margin-top:0; color:#106b3d; border-bottom:2px solid #eee; padding-bottom:10px;">Contacto</h2>
                 <p><b>Desarrollado por:</b><br>Urbanista Ismael Luna</p>
-                <p>Universidad Nacional Autónoma de México (UNAM)</p>
-                <a href="mailto:ia309745@gmail.com" style="color:#0c414e; font-weight:bold;">ia309745@gmail.com</a>
+                <p style="color:#666;">Universidad Nacional Autónoma de México (UNAM)</p>
+                <a href="mailto:ia309745@gmail.com" style="display:inline-block; margin-top:10px; color:#0c414e; font-weight:bold; text-decoration:none; border-bottom:1px dotted #0c414e;">
+                    <i class="fa-solid fa-envelope"></i> ia309745@gmail.com
+                </a>
             </div>
         </div>
     </div>
@@ -136,15 +147,20 @@
     
     <script>
         function openModal(id) {
-            document.getElementById('modal-overlay').style.display = 'flex';
-            document.getElementById('modal-overlay').style.justifyContent = 'center';
-            document.getElementById('modal-overlay').style.alignItems = 'center';
+            const overlay = document.getElementById('modal-overlay');
+            overlay.style.display = 'flex';
+            overlay.style.justifyContent = 'center';
+            overlay.style.alignItems = 'center';
             
-            // Ocultar todos los cuerpos
+            // Ocultar todos y mostrar el elegido
             document.querySelectorAll('.modal-body').forEach(el => el.style.display = 'none');
-            // Mostrar el seleccionado
             document.getElementById(id).style.display = 'block';
         }
+        
+        // Cerrar al dar clic fuera del cuadro blanco
+        document.getElementById('modal-overlay').addEventListener('click', function(e) {
+            if (e.target === this) this.style.display = 'none';
+        });
     </script>
 </body>
 </html>
